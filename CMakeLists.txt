@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
+# 设置C++标准
+set(CMAKE_CXX_STANDARD 17)
+
 project(Glitter)
 
 option(GLFW_BUILD_DOCS OFF)
