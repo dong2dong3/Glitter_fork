@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Glitter/Vendor/assimp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Glitter/Vendor/bullet" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Glitter/Vendor/glad" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Glitter/Vendor/glfw" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Glitter/Vendor/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Glitter/Vendor/stb" vcs="Git" />
+  </component>
+</project>
