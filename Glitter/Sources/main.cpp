@@ -8,10 +8,7 @@
 #include "consoleColor.hpp"
 #include <iostream>
 #include <cmath>
-
-#include "Shader.hpp"
 #include <filesystem>
-
 //#include "SOIL.h"
 //#include <soil/SOIL.h>
 //#include <GLFW/SOIL.h>
@@ -77,9 +74,7 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 // Holds uniform value of texture mix
 GLfloat mixValue = 0.2f;
 
-// Shaders
-const GLchar* vertexShaderSource = "";
-const GLchar* fragmentShaderSource = "";
+
 
 GLfloat vertices[] = {
         // 位置              // 颜色
@@ -127,11 +122,18 @@ int main(int argc, char * argv[]) {
 
     // glfw初始化
     glfwInit();
+    // 设置错误回调函数
+    glfwSetErrorCallback(errorCallback);
+//    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+//    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 此行用来给Mac OS X系统做兼容
+//    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);  // 正向兼容模式
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 此行用来给Mac OS X系统做兼容
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     // 创建窗口,获取窗口上上下文
     GLFWwindow* window = glfwCreateWindow(mWidth, mHeight, "LearnOpenGL", nullptr, nullptr);
@@ -149,28 +151,22 @@ int main(int argc, char * argv[]) {
     // Load OpenGL Functions
     gladLoadGL();
     std::cout << BLUE << "OpenGL " << glGetString(GL_VERSION) << RESET << std::endl;
-
     std::cout << "Current working directory: " << executableParentPath << std::endl;
 
-    // 查询GPU最大支持顶点个数
+    // 查询GPU最大支持顶点个数 opengl version
     GLint nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     std::cout << GREEN << "Maximum nr of vertex attributes supported: " << nrAttributes << RESET << std::endl;
-// print opengl version
     std::cout << "GL_VERSION = " << glGetString(GL_VERSION) << std::endl;
 
     // Define the viewport dimensions
     glViewport(0, 0, HEIGHT, WIDTH);
-
     /**
      在深度测试过程中，当一个像素要被绘制时，OpenGL会将该像素的深度值与深度缓冲区中对应位置的深度值进行比较。
      如果该像素的深度值比深度缓冲区中的值更接近观察者，那么它将被绘制；否则，它将被认为是被覆盖的像素而被丢弃。
      */
     // Setup OpenGL options
     glEnable(GL_DEPTH_TEST);
-
-    // Build and compile our shader program
-//    Shader ourShader(getShadersResourcePathWith("textures.vs"), getShadersResourcePathWith("textures.frag"));
 
     // Set up vertex data (and buffer(s)) and attribute pointers
     GLfloat vertices[] = {
@@ -229,6 +225,7 @@ int main(int argc, char * argv[]) {
             glm::vec3( 1.5f,  0.2f, -1.5f),
             glm::vec3(-1.3f,  1.0f, -1.5f)
     };
+
     // 获取视口
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
@@ -256,7 +253,9 @@ int main(int argc, char * argv[]) {
 
     glBindVertexArray(0); // Unbind VAO
 
-
+    // ===========
+    // Texture 1
+    // ===========
     // Load and create a texture
     GLuint texture;
     glGenTextures(1, &texture);
@@ -267,19 +266,14 @@ int main(int argc, char * argv[]) {
     // Set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     // Load image, create texture and generate mipmaps
-//    int width, height;
-//    unsigned char* image = SOIL_load_image(concatenatePath(executableParentPath, "Resources/container.jpg"), &width, &height, 0, SOIL_LOAD_RGB);
-//
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-//    glGenerateMipmap(GL_TEXTURE_2D);
-//    SOIL_free_image_data(image);
-//    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
-    unsigned char* image = stbi_load(concatenatePath(executableParentPath, "Resources/container.jpg"), &width, &height, 0, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    int iwidth, iheight;
+    unsigned char* image = stbi_load(concatenatePath(executableParentPath, "Resources/container.jpg"), &iwidth, &iheight, 0, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iwidth, iheight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(image);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
 
     // ===========
     // Texture 2
@@ -292,22 +286,17 @@ int main(int argc, char * argv[]) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Set texture filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
 
     //Load, Create texture and generate mipmaps
-//    image = SOIL_load_image(concatenatePath(executableParentPath, "Resources/awesomeface.png"), &width, &height, 0, SOIL_LOAD_RGB);
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-//    glGenerateMipmap(GL_TEXTURE_2D);
-//    SOIL_free_image_data(image);
-//    glBindTexture(GL_TEXTURE_2D, 0);
-
-    image = stbi_load(concatenatePath(executableParentPath, "Resources/awesomeface.png"), &width, &height, 0, 0);
+    image = stbi_load(concatenatePath(executableParentPath, "Resources/awesomeface.jpg"), &width, &height, 0, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(image);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    // Build and compile our shader program
     unsigned int chernoProgram = createShaderProgram();
 
     // 渲染
@@ -319,18 +308,14 @@ int main(int argc, char * argv[]) {
         // Render
         // Clear the colorbuffer
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-//    glClear(GL_COLOR_BUFFER_BIT);
+        // glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // Draw our first triangle
         // 使用着色器程序
-//    glUseProgram(shaderProgram);
-
-        // Activate Shader
-//    ourShader.Use();
         glUseProgram(chernoProgram);
 
         // Bind Texture
-//    glBindTexture(GL_TEXTURE_2D, texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glUniform1i(glGetUniformLocation(chernoProgram, "ourTexture1"), 0);
@@ -360,19 +345,14 @@ int main(int argc, char * argv[]) {
 
         // Draw container
         glBindVertexArray(VAO);
-//    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-//    glDrawArrays(GL_TRIANGLES, 0, 36);
-//    glBindVertexArray(0);
 
         for(GLuint i = 1; i < 11; i++)
         {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
-//      bool valid =  (seed + i) % 4 > 0 && (seed + i) % 4 < 4;
             GLfloat angle = 10.0f * i;
             if(i % 3 == 0)  angle = glfwGetTime() * angle;
 
-//      seed = seed + 1;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
@@ -380,8 +360,7 @@ int main(int argc, char * argv[]) {
             /**
              [OpenGL Error] (1280)glDrawArrays(-1, 0, 36) /Users/zhangjie/Documents/SFML learning/EchoOpenGL/src/main.cpp:502
              */
-//      GLCall(glDrawArrays(-1, 0, 36));
-
+            // GLCall(glDrawArrays(-1, 0, 36));
         }
         glBindVertexArray(0);
 
@@ -392,7 +371,6 @@ int main(int argc, char * argv[]) {
     // Properly de-allocate all resources once they've outlived their purpose
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-//  glDeleteBuffers(1, &EBO);
 
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
@@ -420,81 +398,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-void programShaders() {
-
-    // 创建顶点着色器对象和片段着色器对象
-    // Build and compile our shader program
-    // Vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    // Check for compile time errors
-    GLint success;
-    GLchar infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // Check for compile time errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // 创建着色器程序对象并链接着色器
-    // Link shaders
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    // Check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-    // 删除着色器对象，因为它们已经链接到着色器程序中
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-}
-
-void listFilesRecursively(const std::filesystem::path& path)
-{
-    if (std::filesystem::is_directory(path))
-    {
-        for (const auto& entry : std::filesystem::directory_iterator(path))
-        {
-            if (std::filesystem::is_directory(entry))
-            {
-                listFilesRecursively(entry.path());
-            }
-            else
-            {
-                std::cout << entry.path() << std::endl;
-            }
-        }
-    }
-    else
-    {
-        std::cout << path << std::endl;
-    }
-}
-
 unsigned int createShaderProgram() {
-
     ShaderProgramSource source = ParseShader(concatenatePath(executableParentPath, "Shaders/basic_cherno.shader"));
-
-  std::cout << "VERTEX" <<source.VertexSource<< "FRAGMENT" << source.FragmentSource << std::endl;
+    std::cout << "VERTEX" <<source.VertexSource<< "FRAGMENT" << source.FragmentSource << std::endl;
     unsigned int program = CreateShader(source.VertexSource, source.FragmentSource);
     return program;
 }
