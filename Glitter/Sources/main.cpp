@@ -5,19 +5,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-// Standard Headers
-#include <cstdio>
-#include <cstdlib>
-
 #include "consoleColor.hpp"
-
-//
-//  main.cpp
-//  Echo First GLFW APP
-//
-//  Created by zhangjie on 2023/7/3.
-//
-
 #include <iostream>
 #include <cmath>
 
@@ -57,6 +45,8 @@ const char* concatenatePath(const std::filesystem::path& directoryPath, const st
 const char* getImageResourcePathWith(const std::string& filename);
 
 const char* getShadersResourcePathWith(const std::string& filename);
+
+unsigned int createShaderProgram();
 // 自定义错误回调函数
 static void errorCallback(int error, const char* description) {
     std::cerr << "GLFW Error " << error << ": " << description << std::endl;
@@ -110,9 +100,6 @@ GLuint indices[] = {  // Note that we start from 0!
 };
 
 // The MAIN function, from here we start the application and run the game loop
-
-std::filesystem::path executableParentPath = std::filesystem::current_path();
-
 std::ostream& operator<<(std::ostream& os, const glm::mat4& mat) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -126,46 +113,16 @@ std::ostream& operator<<(std::ostream& os, const glm::mat4& mat) {
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-int import3dmodel()
+std::filesystem::path executableParentPath = std::filesystem::current_path();
+const char* concatenatePath(const std::filesystem::path& directoryPath, const std::string& filename)
 {
-    // 初始化Assimp Importer
-//    Assimp::Importer importer;
-//
-//    // 加载模型文件
-//    const aiScene* scene = importer.ReadFile("path/to/model.obj",
-//                                             aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
-//
-//    // 检查模型是否成功加载
-//    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-//    {
-//        std::cout << "Failed to load model: " << importer.GetErrorString() << std::endl;
-//        return -1;
-//    }
-//
-//    // 遍历场景中的节点
-//    aiNode* rootNode = scene->mRootNode;
-//    for (unsigned int i = 0; i < rootNode->mNumChildren; ++i)
-//    {
-//        aiNode* childNode = rootNode->mChildren[i];
-//
-//        // 处理节点的网格数据
-//        if (childNode->mNumMeshes > 0)
-//        {
-//            unsigned int meshIndex = childNode->mMeshes[0];
-//            aiMesh* mesh = scene->mMeshes[meshIndex];
-//
-//            // 在这里可以访问网格数据，例如顶点坐标、法线、纹理坐标等
-//            // ...
-//
-//            // 输出网格的顶点数量
-//            std::cout << "Mesh " << i << " has " << mesh->mNumVertices << " vertices." << std::endl;
-//        }
-//    }
-//
-    return 0;
+    std::filesystem::path filePath = directoryPath;
+    filePath.append(filename);
+    std::string filePathString = filePath.string();
+    char* result = new char[filePathString.length() + 1];
+    std::strcpy(result, filePathString.c_str());
+    return result;
 }
-
 int main(int argc, char * argv[]) {
 
     // glfw初始化
@@ -191,16 +148,14 @@ int main(int argc, char * argv[]) {
 
     // Load OpenGL Functions
     gladLoadGL();
-//    fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
     std::cout << BLUE << "OpenGL " << glGetString(GL_VERSION) << RESET << std::endl;
-    std::filesystem::path currentPath = std::filesystem::current_path();
-    std::filesystem::current_path(currentPath.parent_path());
-    std::cout << "Current working directory: " << currentPath << std::endl;
+
+    std::cout << "Current working directory: " << executableParentPath << std::endl;
 
     // 查询GPU最大支持顶点个数
-//    GLint nrAttributes;
-//    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
-//    std::cout << GREEN << "Maximum nr of vertex attributes supported: " << nrAttributes << RESET << std::endl;
+    GLint nrAttributes;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+    std::cout << GREEN << "Maximum nr of vertex attributes supported: " << nrAttributes << RESET << std::endl;
 
     // 获取视口
     int width, height;
@@ -208,8 +163,11 @@ int main(int argc, char * argv[]) {
     glViewport(0, 0, width, height);
 
     // 编译着色器程序
-    Shader ourShader(currentPath.parent_path().append("Shaders/echo_shader.vs").c_str(), currentPath.parent_path().append("Shaders/echo_shader.frag").c_str());
 
+    Shader ourShader(concatenatePath(executableParentPath, "Shaders/textures.vs"),
+                     concatenatePath(executableParentPath, "Shaders/textures.frag"));
+
+    unsigned int chernoProgram = createShaderProgram();
     // 顶点输入
     GLfloat vertices[] = {
 //     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
@@ -269,13 +227,12 @@ int main(int argc, char * argv[]) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // 读取图片并生成纹理映射
-//    int width, height;
-    unsigned char* image = stbi_load("container.jpg", &width, &height, 0, 0);
+
+    unsigned char* image = stbi_load(concatenatePath(executableParentPath, "Resources/container.jpg"), &width, &height, 0, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(image);
     glBindTexture(GL_TEXTURE_2D, 0);
-
 
     // 渲染
     while (!glfwWindowShouldClose(window))
@@ -380,119 +337,6 @@ void programShaders() {
     glDeleteShader(fragmentShader);
 }
 
-void draft_dir() {
-    const char* file1 = getShadersResourcePathWith("textures.vs");
-    const char* file2 = getShadersResourcePathWith("textures.frag");
-    std::cout <<"\nzjzjzj"<< file1 << "\nzjzjzj\n" << file2 << std::endl;
-}
-
-void modifyVAO_VBO_VEO() {
-    // 创建VAO和VBO
-    GLuint VAO;
-    glGenVertexArrays(1, &VAO);
-    // 绑定VAO
-    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-    glBindVertexArray(VAO);
-
-    GLuint VBO;
-    glGenBuffers(1, &VBO);
-    // 绑定VBO并存储顶点数据
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    GLuint EBO;
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-
-    // 配置顶点属性指针
-//  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-//  glEnableVertexAttribArray(0);
-//
-//  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-//  glEnableVertexAttribArray(1);
-
-    // 位置属性
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    // 颜色属性
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3* sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
-    // 解绑VBO和VAO
-    // Note that this is allowed, the call to glVertexAttribPointer registered VBO as the currently bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
-    glBindVertexArray(0);
-}
-
-
-void loadAndCreateTexture() {
-    // Build and compile our shader program
-    Shader ourShader("./echo_shaders/textures.vs", "./echo_shaders/textures.frag");
-
-    // Set up vertex data (and buffer(s)) and attribute pointers
-    GLfloat vertices[] = {
-            // Positions          // Colors           // Texture Coords
-            0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   3.0f, 3.0f, // Top Right
-            0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   3.0f, 0.0f, // Bottom Right
-            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // Bottom Left
-            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 3.0f  // Top Left
-    };
-    GLuint indices[] = {  // Note that we start from 0!
-            0, 1, 3, // First Triangle
-            1, 2, 3  // Second Triangle
-    };
-
-    GLuint VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    // Color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-    // TexCoord attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(2);
-
-    glBindVertexArray(0); // Unbind VAO
-
-
-    // Load and create a texture
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture); // All upcoming GL_TEXTURE_2D operations now have effect on this texture object
-    // Set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // Set texture wrapping to GL_REPEAT (usually basic wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // Set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
-    // Load image, create texture and generate mipmaps
-    int width, height;
-//    unsigned char* image = SOIL_load_image("container.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-//    unsigned char* image = stbi_load("container.jpg", &width, &height, 0, 0);
-
-
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-//    SOIL_free_image_data(image);
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
-}
-
 void listFilesRecursively(const std::filesystem::path& path)
 {
     if (std::filesystem::is_directory(path))
@@ -515,46 +359,6 @@ void listFilesRecursively(const std::filesystem::path& path)
     }
 }
 
-const char* concatenatePath(const std::filesystem::path& directoryPath, const std::string& filename)
-{
-    std::filesystem::path filePath = directoryPath;
-    filePath.append(filename);
-    std::string filePathString = filePath.string();
-    char* result = new char[filePathString.length() + 1];
-    std::strcpy(result, filePathString.c_str());
-    return result;
-}
-
-const char* getResourcePathWith(const std::string& filename)
-{
-    std::filesystem::path filePath = std::filesystem::current_path();
-    filePath.append("Resources/" + filename);
-    std::string filePathString = filePath.string();
-    char* result = new char[filePathString.length() + 1];
-    std::strcpy(result, filePathString.c_str());
-    return result;
-}
-
-const char* getImageResourcePathWith(const std::string& filename)
-{
-    std::filesystem::path filePath = std::filesystem::current_path();
-    filePath.append("Resources/" + filename);
-    std::string filePathString = filePath.string();
-    char* result = new char[filePathString.length() + 1];
-    std::strcpy(result, filePathString.c_str());
-    return result;
-}
-
-const char* getShadersResourcePathWith(const std::string& filename)
-{
-    std::filesystem::path filePath = std::filesystem::current_path();
-    filePath.append("Resources/echo_shaders/" + filename);
-    std::string filePathString = filePath.string();
-    char* result = new char[filePathString.length() + 1];
-    std::strcpy(result, filePathString.c_str());
-    return result;
-}
-
 unsigned int createShaderProgram() {
 
     ShaderProgramSource source = ParseShader(getShadersResourcePathWith("basic_cherno.shader"));
@@ -563,42 +367,3 @@ unsigned int createShaderProgram() {
     unsigned int program = CreateShader(source.VertexSource, source.FragmentSource);
     return program;
 }
-
-
-//int main(int argc, char * argv[]) {
-//
-//    // Load GLFW and Create a Window
-//    glfwInit();
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-//    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-//    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-//    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-//    auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr, nullptr);
-//
-//    // Check for Valid Context
-//    if (mWindow == nullptr) {
-//        fprintf(stderr, "Failed to Create OpenGL Context");
-//        return EXIT_FAILURE;
-//    }
-//
-//    // Create Context and Load OpenGL Functions
-//    glfwMakeContextCurrent(mWindow);
-//    gladLoadGL();
-//    fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
-//
-//    // Rendering Loop
-//    while (glfwWindowShouldClose(mWindow) == false) {
-//        if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-//            glfwSetWindowShouldClose(mWindow, true);
-//
-//        // Background Fill Color
-//        glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
-//        glClear(GL_COLOR_BUFFER_BIT);
-//
-//        // Flip Buffers and Draw
-//        glfwSwapBuffers(mWindow);
-//        glfwPollEvents();
-//    }   glfwTerminate();
-//    return EXIT_SUCCESS;
-//}

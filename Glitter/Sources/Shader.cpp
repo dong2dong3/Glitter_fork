@@ -23,7 +23,9 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
     // 保证ifstream对象可以抛出异常：
     vShaderFile.exceptions(std::ifstream::badbit);
     fShaderFile.exceptions(std::ifstream::badbit);
-    
+    std::cout << "zjzjzj vertexPath directory: " << vertexPath << std::endl <<
+    "zjzjzj vertexPath directory: "  << fragmentPath << std::endl;
+
     try {
       // 打开文件
       vShaderFile.open(vertexPath);
@@ -38,8 +40,6 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
       // 转换流至GLchar数组
       vertexCode = vShaderStream.str();
       fragmentCode = fShaderStream.str();
-        std::filesystem::path currentPath = std::filesystem::current_path();
-        std::cout << "Current working directory: " << currentPath << std::endl;
 
     }
     catch(std::ifstream::failure e)
@@ -48,8 +48,6 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
     }
     const GLchar* vShaderCode = vertexCode.c_str();
     const GLchar* fShaderCode = fragmentCode.c_str();
-    std::filesystem::path currentPath = std::filesystem::current_path();
-    std::cout << "Current working directory: " << currentPath << std::endl;
     // 2. 编译着色器
     GLuint vertex, fragment;
     GLint success;

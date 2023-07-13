@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
+project(Glitter)
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 17)
-
-project(Glitter)
 
 option(GLFW_BUILD_DOCS OFF)
 option(GLFW_BUILD_EXAMPLES OFF)
@@ -31,7 +30,6 @@ else()
 endif()
 
 include_directories(Glitter/Headers/
-                    Glitter/Headers/GL/
                     Glitter/Vendor/assimp/include/
                     Glitter/Vendor/bullet/src/
                     Glitter/Vendor/glad/include/
@@ -74,13 +72,30 @@ add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
 target_link_libraries(${PROJECT_NAME} assimp glfw
                       ${GLFW_LIBRARIES} ${GLAD_LIBRARIES}
                       BulletDynamics BulletCollision LinearMath)
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
+
+message("zjzjzj CMAKE_CURRENT_BINARY_DIR is ${CMAKE_BINARY_DIR}")
+message("zjzjzj Glitter path is${CMAKE_BINARY_DIR}/${PROJECT_NAME}")
 
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources
-
-        DEPENDS ${PROJECT_SHADERS} ${PROJECT_RESOURCES}
+    #DEPENDS ${PROJECT_SHADERS} ${PROJECT_RESOURCES}
 )
+
+function(print_directory_structure TARGET_DIR)
+    message("Directory structure of ${TARGET_DIR}:")
+    file(GLOB_RECURSE files "${TARGET_DIR}/*")
+    foreach(file ${files})
+        file(RELATIVE_PATH relative_path "${TARGET_DIR}" "${file}")
+        message("  ${relative_path}")
+    endforeach()
+endfunction()
+
+# 调用函数打印目标文件目录结构
+# print_directory_structure(${CMAKE_BINARY_DIR})
+
+message(EXECUTABLE_OUTPUT_PATH)
