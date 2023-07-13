@@ -4,11 +4,14 @@
 #pragma once
 
 // System Headers
+// GLEW
+//#define GLEW_STATIC
+//#include <GL/glew.h>
+#include <glad/glad.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <btBulletDynamicsCommon.h>
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 

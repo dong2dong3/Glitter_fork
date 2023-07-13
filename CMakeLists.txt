@@ -69,15 +69,23 @@ add_definitions(-DGLFW_INCLUDE_NONE
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
                                ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
                                ${VENDORS_SOURCES})
-target_link_libraries(${PROJECT_NAME} assimp glfw
-                      ${GLFW_LIBRARIES} ${GLAD_LIBRARIES}
-                      BulletDynamics BulletCollision LinearMath)
+target_link_libraries(${PROJECT_NAME}
+        assimp
+        glfw
+        ${GLFW_LIBRARIES}
+        ${CMAKE_SOURCE_DIR}/Glitter/lib-x86_64/libGLEW.a
+        ${GLAD_LIBRARIES}
+        BulletDynamics
+        BulletCollision
+        LinearMath
+        )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
 
-message("zjzjzj CMAKE_CURRENT_BINARY_DIR is ${CMAKE_BINARY_DIR}")
-message("zjzjzj Glitter path is${CMAKE_BINARY_DIR}/${PROJECT_NAME}")
+#message("zjzjzj CMAKE_CURRENT_BINARY_DIR is ${CMAKE_BINARY_DIR}")
+#message("zjzjzj Glitter path is${CMAKE_BINARY_DIR}/${PROJECT_NAME}")
+message("zjzjzj GLFW_LIBRARIES ${GLFW_LIBRARIES}")
 
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
@@ -97,5 +105,3 @@ endfunction()
 
 # 调用函数打印目标文件目录结构
 # print_directory_structure(${CMAKE_BINARY_DIR})
-
-message(EXECUTABLE_OUTPUT_PATH)

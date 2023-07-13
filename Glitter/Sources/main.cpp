@@ -2,7 +2,6 @@
 #include "glitter.hpp"
 
 // System Headers
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "consoleColor.hpp"
@@ -144,6 +143,15 @@ int main(int argc, char * argv[]) {
         return -1;
     }
     glfwMakeContextCurrent(window);
+
+//    // Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
+//    glewExperimental = GL_TRUE;
+//    // Initialize GLEW to setup the OpenGL Function pointers
+//    if (glewInit() != GLEW_OK)
+//    {
+//        std::cout << "Failed to initialize GLEW" << std::endl;
+//        return -1;
+//    }
 
     // 通过glfw注册按键事件回调
     glfwSetKeyCallback(window, key_callback);

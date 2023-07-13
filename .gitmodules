@@ -29,3 +29,6 @@
 [submodule "Glitter/Vendor/soil"]
 	path = Glitter/Vendor/soil
 	url = https://github.com/littlstar/soil.git
+[submodule "Glitter/Vendor/glew"]
+	path = Glitter/Vendor/glew
+	url = https://github.com/edoren/glew.git
