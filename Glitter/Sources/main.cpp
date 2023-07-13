@@ -1,5 +1,6 @@
 // Local Headers
 #include "glitter.hpp"
+#include "Camera.h"
 
 // System Headers
 #include <GLFW/glfw3.h>
@@ -7,9 +8,7 @@
 #include <iostream>
 #include <cmath>
 #include <filesystem>
-//#include "SOIL.h"
-//#include <soil/SOIL.h>
-//#include <GLFW/SOIL.h>
+
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -75,6 +74,8 @@ glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 3.0f);
 GLfloat deltaTime = 0.0f;   // 当前帧遇上一帧的时间差
 GLfloat lastFrame = 0.0f;   // 上一帧的时间
 
+// Camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 bool keys[1024];
 //鼠标起始位置
 bool firstMouse = true;
@@ -304,15 +305,10 @@ int main(int argc, char * argv[]) {
 
         // Camera/View transformations
         glm::mat4 view = glm::mat4(1.0f);
-        GLfloat radius = 10.0f;
-        GLfloat camX = sin(glfwGetTime()) * radius;
-        GLfloat camZ = cos(glfwGetTime()) * radius;
-//        view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        view = camera.GetViewMatrix();
         // Projection
         glm::mat4 projection = glm::mat4(1.0f);
-//        projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
-        projection = glm::perspective(fov, (GLfloat)WIDTH/(GLfloat)HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH/(GLfloat)HEIGHT, 0.1f, 100.0f);
 
         // Get their uniform location
         GLint modelLoc = glGetUniformLocation(chernoProgram, "model");
@@ -356,16 +352,18 @@ int main(int argc, char * argv[]) {
     glfwTerminate();
     return 0;
 }
+
+// Moves/alters the camera positions based on user input
 void do_movement() {
-    GLfloat cameraSpeed = 5.0f * deltaTime;
+    // Camera controls
     if(keys[GLFW_KEY_W])
-        cameraPos += cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if(keys[GLFW_KEY_S])
-        cameraPos -= cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if(keys[GLFW_KEY_A])
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if(keys[GLFW_KEY_D])
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 // Is called whenever a key is pressed/released via GLFW
@@ -397,40 +395,25 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     // 这个bool变量一开始是设定为true的
-    if(firstMouse) {
+    if(firstMouse)
+    {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
     }
-    GLfloat xoffset = lastX - xpos;
-    GLfloat yoffset = ypos - lastY; // 注意这里是相反的，因为y坐标的范围是从下往上的
+
+    GLfloat xoffset = xpos - lastX;
+    GLfloat yoffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to left
+
     lastX = xpos;
     lastY = ypos;
 
-    GLfloat sensitivity = 0.05f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-    yaw   += xoffset;
-    pitch += yoffset;
-    if(pitch > 89.0f)
-        pitch =  89.0f;
-    if(pitch < -89.0f)
-        pitch = -89.0f;
-    glm::vec3 front;
-    front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-    front.y = sin(glm::radians(pitch));
-    front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-    cameraFront = glm::normalize(front);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    if(fov >= 1.0f && fov <= 45.0f)
-        fov -= yoffset;
-    if(fov <= 1.0f)
-        fov = 1.0f;
-    if(fov >= 45.0f)
-        fov = 45.0f;
+    camera.ProcessMouseScroll(yoffset);
 }
 
 unsigned int createShaderProgram() {
