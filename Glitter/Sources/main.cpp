@@ -13,6 +13,7 @@
 #include <filesystem>
 
 //#include "SOIL.h"
+//#include <soil/SOIL.h>
 //#include <GLFW/SOIL.h>
 
 #include <glm/glm.hpp>
@@ -44,9 +45,8 @@ const char* concatenatePath(const std::filesystem::path& directoryPath, const st
 
 const char* getImageResourcePathWith(const std::string& filename);
 
-const char* getShadersResourcePathWith(const std::string& filename);
-
 unsigned int createShaderProgram();
+
 // 自定义错误回调函数
 static void errorCallback(int error, const char* description) {
     std::cerr << "GLFW Error " << error << ": " << description << std::endl;
@@ -156,115 +156,246 @@ int main(int argc, char * argv[]) {
     GLint nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     std::cout << GREEN << "Maximum nr of vertex attributes supported: " << nrAttributes << RESET << std::endl;
+// print opengl version
+    std::cout << "GL_VERSION = " << glGetString(GL_VERSION) << std::endl;
 
+    // Define the viewport dimensions
+    glViewport(0, 0, HEIGHT, WIDTH);
+
+    /**
+     在深度测试过程中，当一个像素要被绘制时，OpenGL会将该像素的深度值与深度缓冲区中对应位置的深度值进行比较。
+     如果该像素的深度值比深度缓冲区中的值更接近观察者，那么它将被绘制；否则，它将被认为是被覆盖的像素而被丢弃。
+     */
+    // Setup OpenGL options
+    glEnable(GL_DEPTH_TEST);
+
+    // Build and compile our shader program
+//    Shader ourShader(getShadersResourcePathWith("textures.vs"), getShadersResourcePathWith("textures.frag"));
+
+    // Set up vertex data (and buffer(s)) and attribute pointers
+    GLfloat vertices[] = {
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+
+    glm::vec3 cubePositions[] = {
+            glm::vec3( 0.0f,  0.0f,  0.0f),
+            glm::vec3( 2.0f,  5.0f, -15.0f),
+            glm::vec3(-1.5f, -2.2f, -2.5f),
+            glm::vec3(-3.8f, -2.0f, -12.3f),
+            glm::vec3( 2.4f, -0.4f, -3.5f),
+            glm::vec3(-1.7f,  3.0f, -7.5f),
+            glm::vec3( 1.3f, -2.0f, -2.5f),
+            glm::vec3( 1.5f,  2.0f, -2.5f),
+            glm::vec3( 1.5f,  0.2f, -1.5f),
+            glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
     // 获取视口
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
-    // 编译着色器程序
-
-    Shader ourShader(concatenatePath(executableParentPath, "Shaders/textures.vs"),
-                     concatenatePath(executableParentPath, "Shaders/textures.frag"));
-
-    unsigned int chernoProgram = createShaderProgram();
-    // 顶点输入
-    GLfloat vertices[] = {
-//     ---- 位置 ----       ---- 颜色 ----     - 纹理坐标 -
-            0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // 右上
-            0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // 右下
-            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // 左下
-            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // 左上
-    };
-
-    GLuint indices[] = { // 注意索引从0开始!
-            0, 1, 3, // 第一个三角形
-            1, 2, 3  // 第二个三角形
-    };
-
-
-    // 顶点数组对象 Vertex Array Object, VAO
-    // 顶点缓冲对象 Vertex Buffer Object，VBO
-    // 索引缓冲对象：Element Buffer Object，EBO或Index Buffer Object，IBO
     GLuint VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-    // !!! Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+
     glBindVertexArray(VAO);
-    // 把顶点数组复制到缓冲中供OpenGL使用
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // 设置顶点position属性指针
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
-
-    // 设置顶点color属性指针
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
-    // 设置顶点TexCoord属性指针
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+//  // Color attribute
+//  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+//  glEnableVertexAttribArray(1);
+    // TexCoord attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(2);
 
-    glBindVertexArray(0);
+    glBindVertexArray(0); // Unbind VAO
 
-    // 使用线框模式进行渲染
-//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    // 读取并创建贴图
+    // Load and create a texture
     GLuint texture;
     glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture); // 之后对GL_TEXTURE_2D的所以操作都作用在texture对象上
-    // 设置纹理环绕方式
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_2D, texture); // All upcoming GL_TEXTURE_2D operations now have effect on this texture object
+    // Set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);  // Set texture wrapping to GL_REPEAT (usually basic wrapping method)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // 设置纹理过滤方式
+    // Set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // 读取图片并生成纹理映射
-
+    // Load image, create texture and generate mipmaps
+//    int width, height;
+//    unsigned char* image = SOIL_load_image(concatenatePath(executableParentPath, "Resources/container.jpg"), &width, &height, 0, SOIL_LOAD_RGB);
+//
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+//    glGenerateMipmap(GL_TEXTURE_2D);
+//    SOIL_free_image_data(image);
+//    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
     unsigned char* image = stbi_load(concatenatePath(executableParentPath, "Resources/container.jpg"), &width, &height, 0, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(image);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    // ===========
+    // Texture 2
+    // ===========
+    GLuint texture2;
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+    // Set our texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Set texture filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //Load, Create texture and generate mipmaps
+//    image = SOIL_load_image(concatenatePath(executableParentPath, "Resources/awesomeface.png"), &width, &height, 0, SOIL_LOAD_RGB);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+//    glGenerateMipmap(GL_TEXTURE_2D);
+//    SOIL_free_image_data(image);
+//    glBindTexture(GL_TEXTURE_2D, 0);
+
+    image = stbi_load(concatenatePath(executableParentPath, "Resources/awesomeface.png"), &width, &height, 0, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(image);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    unsigned int chernoProgram = createShaderProgram();
+
     // 渲染
     while (!glfwWindowShouldClose(window))
     {
-        // 检查事件
+        // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
         glfwPollEvents();
 
-        // 渲染指令
+        // Render
+        // Clear the colorbuffer
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+//    glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Draw our first triangle
+        // 使用着色器程序
+//    glUseProgram(shaderProgram);
 
-        // 绑定texture
+        // Activate Shader
+//    ourShader.Use();
+        glUseProgram(chernoProgram);
+
+        // Bind Texture
+//    glBindTexture(GL_TEXTURE_2D, texture);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
+        glUniform1i(glGetUniformLocation(chernoProgram, "ourTexture1"), 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+        glUniform1i(glGetUniformLocation(chernoProgram, "ourTexture2"), 1);
 
-        // 绘图
-        ourShader.Use();
+        // Set current value of uniform mix
+        glUniform1f(glGetUniformLocation(chernoProgram, "mixValue"), mixValue);
+
+        // Create transformations
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 projection = glm::mat4(1.0f);
+//    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+//    model = glm::rotate(model, (GLfloat)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+        // Get their uniform location
+        GLint modelLoc = glGetUniformLocation(chernoProgram, "model");
+        GLint viewLoc = glGetUniformLocation(chernoProgram, "view");
+        GLint projLoc = glGetUniformLocation(chernoProgram, "projection");
+        // Pass them to the shaders
+//    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        // Note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+        // Draw container
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+//    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+//    glDrawArrays(GL_TRIANGLES, 0, 36);
+//    glBindVertexArray(0);
+
+        for(GLuint i = 1; i < 11; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+//      bool valid =  (seed + i) % 4 > 0 && (seed + i) % 4 < 4;
+            GLfloat angle = 10.0f * i;
+            if(i % 3 == 0)  angle = glfwGetTime() * angle;
+
+//      seed = seed + 1;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            /**
+             [OpenGL Error] (1280)glDrawArrays(-1, 0, 36) /Users/zhangjie/Documents/SFML learning/EchoOpenGL/src/main.cpp:502
+             */
+//      GLCall(glDrawArrays(-1, 0, 36));
+
+        }
         glBindVertexArray(0);
 
-        // 交换缓冲
+        // Swap the screen buffers
         glfwSwapBuffers(window);
     }
 
-    // 释放VAO,VBO
+    // Properly de-allocate all resources once they've outlived their purpose
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+//  glDeleteBuffers(1, &EBO);
 
-    // 释放GLFW分配的内存
+    // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
-
     return 0;
 }
 
@@ -361,9 +492,9 @@ void listFilesRecursively(const std::filesystem::path& path)
 
 unsigned int createShaderProgram() {
 
-    ShaderProgramSource source = ParseShader(getShadersResourcePathWith("basic_cherno.shader"));
+    ShaderProgramSource source = ParseShader(concatenatePath(executableParentPath, "Shaders/basic_cherno.shader"));
 
-//  std::cout << "VERTEX" <<source.VertexSource<< "FRAGMENT" << source.FragmentSource << std::endl;
+  std::cout << "VERTEX" <<source.VertexSource<< "FRAGMENT" << source.FragmentSource << std::endl;
     unsigned int program = CreateShader(source.VertexSource, source.FragmentSource);
     return program;
 }

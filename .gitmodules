@@ -22,3 +22,10 @@
     path = Glitter/Vendor/bullet
     url = https://github.com/bulletphysics/bullet3.git
     branch = master
+# [submodule "Glitter/Vendor/soil"]
+#     path = Glitter/Vendor/soil
+#     url = https://github.com/littlstar/soil.git
+#     branch = master
+[submodule "Glitter/Vendor/soil"]
+	path = Glitter/Vendor/soil
+	url = https://github.com/littlstar/soil.git

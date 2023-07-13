@@ -7,6 +7,7 @@
     <mapping directory="$PROJECT_DIR$/Glitter/Vendor/glad" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Glitter/Vendor/glfw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Glitter/Vendor/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Glitter/Vendor/soil" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Glitter/Vendor/stb" vcs="Git" />
   </component>
 </project>
