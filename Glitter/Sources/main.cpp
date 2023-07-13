@@ -3,7 +3,6 @@
 
 // System Headers
 #include <GLFW/glfw3.h>
-
 #include "consoleColor.hpp"
 #include <iostream>
 #include <cmath>
@@ -20,17 +19,13 @@
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-/* 反斜杠后面不能有空格 */
-#define ASSERT(x) if (!(x)) __builtin_trap()
-#define GLCall(x) GLClearError(); \
-x; \
-ASSERT(GLLogCall(#x, __FILE__, __LINE__))
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include "DraftFunctions.h"
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void loadAndCreateTexture();
 void draft_dir();
 unsigned int createShaderProgram();
@@ -38,60 +33,14 @@ void listFilesRecursively(const std::filesystem::path& path);
 //const char* getResourcePathWith(const std::string filename);
 const char* getResourcePathWith(const std::string& filename);
 const char* concatenatePath(const std::filesystem::path& directoryPath, const std::string& filename);
-
 const char* getImageResourcePathWith(const std::string& filename);
-
 unsigned int createShaderProgram();
-
-// 自定义错误回调函数
-static void errorCallback(int error, const char* description) {
-    std::cerr << "GLFW Error " << error << ": " << description << std::endl;
-}
-
-static void GLClearError() {
-    while (glGetError() != GL_NO_ERROR) {
-    }
-}
-
-static void GLCheckError() {
-    while (GLenum error = glGetError()) {
-        std::cout << "[OpenGL Error] (" << error << ")" << std::endl;
-    }
-}
-
-static bool GLLogCall(const char* function, const char* file, int line) {
-    while (GLenum error = glGetError()) {
-        std::cout << "[OpenGL Error] (" << error << ")" << function << " " << file << ":" <<
-                  line << std::endl;
-        return false;
-    }
-    return true;
-}
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
 // Holds uniform value of texture mix
 GLfloat mixValue = 0.2f;
 
-
-
-GLfloat vertices[] = {
-        // 位置              // 颜色
-        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // 右下
-        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // 左下
-        0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // 顶部
-};
-
-GLfloat vertices2[] = {
-        0.5f,  0.5f, 0.0f,  // Top Right
-        0.5f, -0.5f, 0.0f,  // Bottom Right
-        -0.5f, -0.5f, 0.0f,  // Bottom Left
-        -0.5f,  0.5f, 0.0f   // Top Left
-};
-GLuint indices[] = {  // Note that we start from 0!
-        0, 1, 3,  // First Triangle
-        1, 2, 3   // Second Triangle
-};
 
 // The MAIN function, from here we start the application and run the game loop
 std::ostream& operator<<(std::ostream& os, const glm::mat4& mat) {
@@ -117,17 +66,29 @@ const char* concatenatePath(const std::filesystem::path& directoryPath, const st
     std::strcpy(result, filePathString.c_str());
     return result;
 }
-int main(int argc, char * argv[]) {
 
+// Camera起始位置
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 3.0f);
+
+GLfloat deltaTime = 0.0f;   // 当前帧遇上一帧的时间差
+GLfloat lastFrame = 0.0f;   // 上一帧的时间
+
+bool keys[1024];
+//鼠标起始位置
+bool firstMouse = true;
+GLfloat lastX = 400, lastY = 300;
+// Yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right (due to how Eular angles work) so we initially rotate a bit to the left.
+GLfloat yaw = -90.0f, pitch = 0.0f;
+//鼠标滚轮
+GLfloat fov =  45.0f;
+
+int main(int argc, char * argv[]) {
     // glfw初始化
     glfwInit();
     // 设置错误回调函数
     glfwSetErrorCallback(errorCallback);
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-//    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 此行用来给Mac OS X系统做兼容
-//    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -155,6 +116,10 @@ int main(int argc, char * argv[]) {
 
     // 通过glfw注册按键事件回调
     glfwSetKeyCallback(window, key_callback);
+    // 通过glfw注册鼠标事件回调
+    glfwSetCursorPosCallback(window, mouse_callback);
+    // 通过glfw注册鼠标滚轮事件回调
+    glfwSetScrollCallback(window, scroll_callback);
 
     // Load OpenGL Functions
     gladLoadGL();
@@ -319,6 +284,10 @@ int main(int argc, char * argv[]) {
         // glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        GLfloat currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         // 使用着色器程序
         glUseProgram(chernoProgram);
 
@@ -338,11 +307,12 @@ int main(int argc, char * argv[]) {
         GLfloat radius = 10.0f;
         GLfloat camX = sin(glfwGetTime()) * radius;
         GLfloat camZ = cos(glfwGetTime()) * radius;
-        view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
+//        view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         // Projection
         glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+//        projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(fov, (GLfloat)WIDTH/(GLfloat)HEIGHT, 0.1f, 100.0f);
 
         // Get their uniform location
         GLint modelLoc = glGetUniformLocation(chernoProgram, "model");
@@ -386,6 +356,17 @@ int main(int argc, char * argv[]) {
     glfwTerminate();
     return 0;
 }
+void do_movement() {
+    GLfloat cameraSpeed = 5.0f * deltaTime;
+    if(keys[GLFW_KEY_W])
+        cameraPos += cameraSpeed * cameraFront;
+    if(keys[GLFW_KEY_S])
+        cameraPos -= cameraSpeed * cameraFront;
+    if(keys[GLFW_KEY_A])
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if(keys[GLFW_KEY_D])
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+}
 
 // Is called whenever a key is pressed/released via GLFW
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -406,6 +387,50 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         mixValue -= 0.1f;
         if (mixValue <= 0.0f) mixValue = 0.0f;
     }
+
+    if (action == GLFW_PRESS)
+        keys[key] = true;
+    else if (action == GLFW_RELEASE)
+        keys[key] = false;
+    do_movement();
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    // 这个bool变量一开始是设定为true的
+    if(firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+    GLfloat xoffset = lastX - xpos;
+    GLfloat yoffset = ypos - lastY; // 注意这里是相反的，因为y坐标的范围是从下往上的
+    lastX = xpos;
+    lastY = ypos;
+
+    GLfloat sensitivity = 0.05f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+    yaw   += xoffset;
+    pitch += yoffset;
+    if(pitch > 89.0f)
+        pitch =  89.0f;
+    if(pitch < -89.0f)
+        pitch = -89.0f;
+    glm::vec3 front;
+    front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+    front.y = sin(glm::radians(pitch));
+    front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+    cameraFront = glm::normalize(front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if(fov >= 1.0f && fov <= 45.0f)
+        fov -= yoffset;
+    if(fov <= 1.0f)
+        fov = 1.0f;
+    if(fov >= 45.0f)
+        fov = 45.0f;
 }
 
 unsigned int createShaderProgram() {

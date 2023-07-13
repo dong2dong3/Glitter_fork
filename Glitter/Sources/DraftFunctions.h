@@ -81,3 +81,35 @@ void listFilesRecursively(const std::filesystem::path& path)
     }
 }
 #endif //GLITTER_DRAFTFUNCTIONS_H
+
+
+/* 反斜杠后面不能有空格 */
+#define ASSERT(x) if (!(x)) __builtin_trap()
+#define GLCall(x) GLClearError(); \
+x; \
+ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+
+// 自定义错误回调函数
+static void errorCallback(int error, const char* description) {
+    std::cerr << "GLFW Error " << error << ": " << description << std::endl;
+}
+
+static void GLClearError() {
+    while (glGetError() != GL_NO_ERROR) {
+    }
+}
+
+static void GLCheckError() {
+    while (GLenum error = glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << ")" << std::endl;
+    }
+}
+
+static bool GLLogCall(const char* function, const char* file, int line) {
+    while (GLenum error = glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << ")" << function << " " << file << ":" <<
+                  line << std::endl;
+        return false;
+    }
+    return true;
+}
