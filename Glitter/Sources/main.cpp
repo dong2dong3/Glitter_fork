@@ -25,15 +25,15 @@
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void do_movement();
 void loadAndCreateTexture();
 void draft_dir();
-unsigned int createShaderProgram();
+unsigned int createShaderProgram(const std::string& filePath);
 void listFilesRecursively(const std::filesystem::path& path);
 //const char* getResourcePathWith(const std::string filename);
 const char* getResourcePathWith(const std::string& filename);
 const char* concatenatePath(const std::filesystem::path& directoryPath, const std::string& filename);
 const char* getImageResourcePathWith(const std::string& filename);
-unsigned int createShaderProgram();
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
@@ -52,9 +52,7 @@ std::ostream& operator<<(std::ostream& os, const glm::mat4& mat) {
     return os;
 }
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+
 std::filesystem::path executableParentPath = std::filesystem::current_path();
 const char* concatenatePath(const std::filesystem::path& directoryPath, const std::string& filename)
 {
@@ -67,16 +65,14 @@ const char* concatenatePath(const std::filesystem::path& directoryPath, const st
 }
 
 // Camera起始位置
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 3.0f);
-
 GLfloat deltaTime = 0.0f;   // 当前帧遇上一帧的时间差
 GLfloat lastFrame = 0.0f;   // 上一帧的时间
 
 // Camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 bool keys[1024];
+// Light attributes
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 //鼠标起始位置
 bool firstMouse = true;
 GLfloat lastX = 400, lastY = 300;
@@ -106,15 +102,6 @@ int main(int argc, char * argv[]) {
     }
     glfwMakeContextCurrent(window);
 
-//    // Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
-//    glewExperimental = GL_TRUE;
-//    // Initialize GLEW to setup the OpenGL Function pointers
-//    if (glewInit() != GLEW_OK)
-//    {
-//        std::cout << "Failed to initialize GLEW" << std::endl;
-//        return -1;
-//    }
-
     // 通过glfw注册按键事件回调
     glfwSetKeyCallback(window, key_callback);
     // 通过glfw注册鼠标事件回调
@@ -143,61 +130,91 @@ int main(int argc, char * argv[]) {
     glEnable(GL_DEPTH_TEST);
 
     // Set up vertex data (and buffer(s)) and attribute pointers
+//    GLfloat vertices[] = {
+//            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+//             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+//             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+//             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+//            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+//            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+//
+//            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+//             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+//             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+//             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+//            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+//            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+//
+//            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+//            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+//            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+//            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+//            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+//            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+//
+//            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+//            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+//            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+//            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+//            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+//            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+//
+//            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+//             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+//             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+//             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+//            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+//            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+//
+//            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+//             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+//             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+//             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+//            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+//            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+//    };
     GLfloat vertices[] = {
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
 
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
 
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
 
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
 
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f, -0.5f,
 
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
-
-    glm::vec3 cubePositions[] = {
-            glm::vec3( 0.0f,  0.0f,  0.0f),
-            glm::vec3( 2.0f,  5.0f, -15.0f),
-            glm::vec3(-1.5f, -2.2f, -2.5f),
-            glm::vec3(-3.8f, -2.0f, -12.3f),
-            glm::vec3( 2.4f, -0.4f, -3.5f),
-            glm::vec3(-1.7f,  3.0f, -7.5f),
-            glm::vec3( 1.3f, -2.0f, -2.5f),
-            glm::vec3( 1.5f,  2.0f, -2.5f),
-            glm::vec3( 1.5f,  0.2f, -1.5f),
-            glm::vec3(-1.3f,  1.0f, -1.5f)
+            -0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f,
     };
 
     // 获取视口
@@ -205,77 +222,37 @@ int main(int argc, char * argv[]) {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
-    GLuint VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
+    // First, set the container's VAO (and VBO)
+    GLuint VBO, containerVAO;
+    glGenVertexArrays(1, &containerVAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    glBindVertexArray(containerVAO);
     // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
-//  // Color attribute
-//  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-//  glEnableVertexAttribArray(1);
-    // TexCoord attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(2);
 
-    glBindVertexArray(0); // Unbind VAO
-
-    // ===========
-    // Texture 1
-    // ===========
-    // Load and create a texture
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture); // All upcoming GL_TEXTURE_2D operations now have effect on this texture object
-    // Set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);  // Set texture wrapping to GL_REPEAT (usually basic wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // Set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Load image, create texture and generate mipmaps
-    int iwidth, iheight;
-    unsigned char* image = stbi_load(concatenatePath(executableParentPath, "Resources/container.jpg"), &iwidth, &iheight, 0, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iwidth, iheight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(image);
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
-
-    // ===========
-    // Texture 2
-    // ===========
-    GLuint texture2;
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    // Set our texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    // Set texture filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_REPEAT);
-
-    //Load, Create texture and generate mipmaps
-    image = stbi_load(concatenatePath(executableParentPath, "Resources/pony.jpg"), &width, &height, 0, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(image);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    // Then, we set the light's VAO (VBO stays the same. After all, the vertices are the same for the light object (also a 3D cube))
+    GLuint lightVAO;
+    glGenVertexArrays(1, &lightVAO);
+    glBindVertexArray(lightVAO);
+    // We only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need.
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // Set the vertex attributes (only position data for the lamp))
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
 
     // Build and compile our shader program
-    unsigned int chernoProgram = createShaderProgram();
+    unsigned int lightingProgram = createShaderProgram(concatenatePath(executableParentPath, "Shaders/lighting.shader"));
+    unsigned int lampProgram = createShaderProgram(concatenatePath(executableParentPath, "Shaders/lamp.shader"));
 
     // 渲染
     while (!glfwWindowShouldClose(window))
     {
+
         // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
         glfwPollEvents();
 
@@ -285,23 +262,16 @@ int main(int argc, char * argv[]) {
         // glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Calculate deltatime of current frame
         GLfloat currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // 使用着色器程序
-        glUseProgram(chernoProgram);
-
-        // Bind Texture
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform1i(glGetUniformLocation(chernoProgram, "ourTexture1"), 0);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-        glUniform1i(glGetUniformLocation(chernoProgram, "ourTexture2"), 1);
-
-        // Set current value of uniform mix
-        glUniform1f(glGetUniformLocation(chernoProgram, "mixValue"), mixValue);
+        glUseProgram(lightingProgram);
+        GLint objectColorLoc = glGetUniformLocation(lightingProgram, "objectColor");
+        GLint lightColorLoc = glGetUniformLocation(lightingProgram, "lightColor");
+        glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
+        glUniform3f(lightColorLoc, 1.0f, 0.5f, 1.0f);
 
         // Camera/View transformations
         glm::mat4 view = glm::mat4(1.0f);
@@ -311,41 +281,46 @@ int main(int argc, char * argv[]) {
         projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH/(GLfloat)HEIGHT, 0.1f, 100.0f);
 
         // Get their uniform location
-        GLint modelLoc = glGetUniformLocation(chernoProgram, "model");
-        GLint viewLoc = glGetUniformLocation(chernoProgram, "view");
-        GLint projLoc = glGetUniformLocation(chernoProgram, "projection");
+        GLint modelLoc = glGetUniformLocation(lightingProgram, "model");
+        GLint viewLoc = glGetUniformLocation(lightingProgram, "view");
+        GLint projLoc = glGetUniformLocation(lightingProgram, "projection");
         // Pass them to the shaders
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         // Note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
         // Draw container
-        glBindVertexArray(VAO);
+        glBindVertexArray(containerVAO);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(1.0f, 0.3f, 0.5f));
 
-        for(GLuint i = 1; i < 11; i++)
-        {
-            // Calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            GLfloat angle = 10.0f * i;
-            if(i % 3 == 0)  angle = glfwGetTime() * angle;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-            /**
-             [OpenGL Error] (1280)glDrawArrays(-1, 0, 36) /Users/zhangjie/Documents/SFML learning/EchoOpenGL/src/main.cpp:502
-             */
-            // GLCall(glDrawArrays(-1, 0, 36));
-        }
-        glBindVertexArray(0);
+        // Also draw the lamp object, again binding the appropriate shader
+        glUseProgram(lampProgram);
+        // Get location objects for the matrices on the lamp shader (these could be different on a different shader)
+        modelLoc = glGetUniformLocation(lampProgram, "model");
+        viewLoc  = glGetUniformLocation(lampProgram, "view");
+        projLoc  = glGetUniformLocation(lampProgram, "projection");
+        // Set matrices
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        model = glm::mat4() = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        // Draw the light object (using light's vertex attributes)
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
     }
 
     // Properly de-allocate all resources once they've outlived their purpose
-    glDeleteVertexArrays(1, &VAO);
+    glDeleteVertexArrays(1, &containerVAO);
+    glDeleteVertexArrays(1, &lightVAO);
     glDeleteBuffers(1, &VBO);
 
     // Terminate GLFW, clearing any resources allocated by GLFW.
@@ -416,9 +391,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera.ProcessMouseScroll(yoffset);
 }
 
-unsigned int createShaderProgram() {
-    ShaderProgramSource source = ParseShader(concatenatePath(executableParentPath, "Shaders/basic_cherno.shader"));
-//    std::cout << "VERTEX" <<source.VertexSource<< "FRAGMENT" << source.FragmentSource << std::endl;
+unsigned int createShaderProgram(const std::string& filePath) {
+    ShaderProgramSource source = ParseShader(filePath);
+    std::cout << "VERTEX" <<source.VertexSource<< "FRAGMENT" << source.FragmentSource << std::endl;
     unsigned int program = CreateShader(source.VertexSource, source.FragmentSource);
     return program;
 }
