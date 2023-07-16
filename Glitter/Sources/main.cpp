@@ -72,12 +72,12 @@ GLfloat lastFrame = 0.0f;   // 上一帧的时间
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 bool keys[1024];
 // Light attributes
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(1.2f, 1.0f, 1.2f);
 //鼠标起始位置
 bool firstMouse = true;
 GLfloat lastX = 400, lastY = 300;
 // Yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right (due to how Eular angles work) so we initially rotate a bit to the left.
-GLfloat yaw = -90.0f, pitch = 0.0f;
+GLfloat yaw = -0.0f, pitch = 0.0f;
 //鼠标滚轮
 GLfloat fov =  45.0f;
 
@@ -130,91 +130,49 @@ int main(int argc, char * argv[]) {
     glEnable(GL_DEPTH_TEST);
 
     // Set up vertex data (and buffer(s)) and attribute pointers
-//    GLfloat vertices[] = {
-//            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-//             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-//             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-//            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-//
-//            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-//             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-//            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-//            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//
-//            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//
-//            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//
-//            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-//             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-//            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-//            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-//
-//            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-//             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-//             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-//            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-//            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-//    };
+
     GLfloat vertices[] = {
-            -0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f,  0.5f, -0.5f,
-            0.5f,  0.5f, -0.5f,
-            -0.5f,  0.5f, -0.5f,
-            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-            -0.5f, -0.5f,  0.5f,
-            0.5f, -0.5f,  0.5f,
-            0.5f,  0.5f,  0.5f,
-            0.5f,  0.5f,  0.5f,
-            -0.5f,  0.5f,  0.5f,
-            -0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-            -0.5f,  0.5f,  0.5f,
-            -0.5f,  0.5f, -0.5f,
-            -0.5f, -0.5f, -0.5f,
-            -0.5f, -0.5f, -0.5f,
-            -0.5f, -0.5f,  0.5f,
-            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-            0.5f,  0.5f,  0.5f,
-            0.5f,  0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f,  0.5f,
-            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-            -0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f,  0.5f,
-            0.5f, -0.5f,  0.5f,
-            -0.5f, -0.5f,  0.5f,
-            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-            -0.5f,  0.5f, -0.5f,
-            0.5f,  0.5f, -0.5f,
-            0.5f,  0.5f,  0.5f,
-            0.5f,  0.5f,  0.5f,
-            -0.5f,  0.5f,  0.5f,
-            -0.5f,  0.5f, -0.5f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
     // 获取视口
@@ -232,8 +190,12 @@ int main(int argc, char * argv[]) {
 
     glBindVertexArray(containerVAO);
     // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
+    // Normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
 
     // Then, we set the light's VAO (VBO stays the same. After all, the vertices are the same for the light object (also a 3D cube))
     GLuint lightVAO;
@@ -242,7 +204,7 @@ int main(int argc, char * argv[]) {
     // We only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need.
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Set the vertex attributes (only position data for the lamp))
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
 
     // Build and compile our shader program
@@ -268,6 +230,16 @@ int main(int argc, char * argv[]) {
         lastFrame = currentFrame;
 
         glUseProgram(lightingProgram);
+        // change the light's position values over time (can be done anywhere in the render loop actually, but try to do it at least before using the light source positions)
+        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+        lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+
+        GLint lightPosLoc = glGetUniformLocation(lightingProgram, "lightPos");
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+
+        GLint viewPosLoc = glGetUniformLocation(lightingProgram, "viewPos");
+        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
+
         GLint objectColorLoc = glGetUniformLocation(lightingProgram, "objectColor");
         GLint lightColorLoc = glGetUniformLocation(lightingProgram, "lightColor");
         glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);

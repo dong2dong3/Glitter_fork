@@ -91,6 +91,7 @@ add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources
+    COMMENT "Copying resources to build directory"
     #DEPENDS ${PROJECT_SHADERS} ${PROJECT_RESOURCES}
 )
 
