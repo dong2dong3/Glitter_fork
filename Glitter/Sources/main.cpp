@@ -221,7 +221,7 @@ int main(int argc, char * argv[]) {
     // We only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need.
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Set the vertex attributes (only position data for the lamp))
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 
@@ -282,16 +282,19 @@ int main(int argc, char * argv[]) {
 
         glUseProgram(lightingProgram);
         //GLint lightPosLoc = glGetUniformLocation(lightingShader.Program, "light.position");
-        GLint lightDirLoc = glGetUniformLocation(lightingProgram, "light.direction");
+        GLint lightPosLoc = glGetUniformLocation(lightingProgram, "light.position");
         GLint viewPosLoc  = glGetUniformLocation(lightingProgram, "viewPos");
-        //glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(lightDirLoc, -0.2f, -1.0f, -0.3f);
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+//        glUniform3f(lightDirLoc, -0.2f, -1.0f, -0.3f);
         glUniform3f(viewPosLoc,  camera.Position.x, camera.Position.y, camera.Position.z);
 
         // Set lights properties
         glUniform3f(glGetUniformLocation(lightingProgram, "light.ambient"),  0.2f, 0.2f, 0.2f);
         glUniform3f(glGetUniformLocation(lightingProgram, "light.diffuse"),  0.5f, 0.5f, 0.5f);
         glUniform3f(glGetUniformLocation(lightingProgram, "light.specular"), 1.0f, 1.0f, 1.0f);
+        glUniform1f(glGetUniformLocation(lightingProgram, "light.constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(lightingProgram, "light.linear"), 0.09);
+        glUniform1f(glGetUniformLocation(lightingProgram, "light.quadratic"), 0.032);
         // Set material properties
         glUniform1f(glGetUniformLocation(lightingProgram, "material.shininess"), 32.0f);
 
@@ -339,22 +342,22 @@ int main(int argc, char * argv[]) {
         glBindVertexArray(0);
 
 
-//        // Also draw the lamp object, again binding the appropriate shader
-//        glUseProgram(lampProgram);
-//        // Get location objects for the matrices on the lamp shader (these could be different on a different shader)
-//        modelLoc = glGetUniformLocation(lampProgram, "model");
-//        viewLoc  = glGetUniformLocation(lampProgram, "view");
-//        projLoc  = glGetUniformLocation(lampProgram, "projection");
-//        // Set matrices
-//        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-//        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-//        model = glm::mat4() = glm::mat4(1.0f);
-//        model = glm::translate(model, lightPos);
-//        model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
-//        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-//        // Draw the light object (using light's vertex attributes)
-//        glBindVertexArray(lightVAO);
-//        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // Also draw the lamp object, again binding the appropriate shader
+        glUseProgram(lampProgram);
+        // Get location objects for the matrices on the lamp shader (these could be different on a different shader)
+        modelLoc = glGetUniformLocation(lampProgram, "model");
+        viewLoc  = glGetUniformLocation(lampProgram, "view");
+        projLoc  = glGetUniformLocation(lampProgram, "projection");
+        // Set matrices
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        model = glm::mat4() = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        // Draw the light object (using light's vertex attributes)
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // Swap the screen buffers
         glfwSwapBuffers(window);
