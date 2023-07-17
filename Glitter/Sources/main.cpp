@@ -283,17 +283,23 @@ int main(int argc, char * argv[]) {
         glUseProgram(lightingProgram);
         //GLint lightPosLoc = glGetUniformLocation(lightingShader.Program, "light.position");
         GLint lightPosLoc = glGetUniformLocation(lightingProgram, "light.position");
+        GLint lightSpotdirLoc    = glGetUniformLocation(lightingProgram, "light.direction");
+        GLint lightSpotCutOffLoc = glGetUniformLocation(lightingProgram, "light.cutOff");
         GLint viewPosLoc  = glGetUniformLocation(lightingProgram, "viewPos");
         glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 //        glUniform3f(lightDirLoc, -0.2f, -1.0f, -0.3f);
+        glUniform3f(lightSpotdirLoc,    camera.Front.x, camera.Front.y, camera.Front.z);
+        glUniform1f(lightSpotCutOffLoc, glm::cos(glm::radians(12.5f)));
         glUniform3f(viewPosLoc,  camera.Position.x, camera.Position.y, camera.Position.z);
 
         // Set lights properties
-        glUniform3f(glGetUniformLocation(lightingProgram, "light.ambient"),  0.2f, 0.2f, 0.2f);
-        glUniform3f(glGetUniformLocation(lightingProgram, "light.diffuse"),  0.5f, 0.5f, 0.5f);
-        glUniform3f(glGetUniformLocation(lightingProgram, "light.specular"), 1.0f, 1.0f, 1.0f);
-        glUniform1f(glGetUniformLocation(lightingProgram, "light.constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(lightingProgram, "light.linear"), 0.09);
+        glUniform3f(glGetUniformLocation(lightingProgram, "light.ambient"),   0.1f, 0.1f, 0.1f);
+        // We set the diffuse intensity a bit higher; note that the right lighting conditions differ with each lighting method and environment.
+        // Each environment and lighting type requires some tweaking of these variables to get the best out of your environment.
+        glUniform3f(glGetUniformLocation(lightingProgram, "light.diffuse"),   0.8f, 0.8f, 0.8f);
+        glUniform3f(glGetUniformLocation(lightingProgram, "light.specular"),  1.0f, 1.0f, 1.0f);
+        glUniform1f(glGetUniformLocation(lightingProgram, "light.constant"),  1.0f);
+        glUniform1f(glGetUniformLocation(lightingProgram, "light.linear"),    0.09);
         glUniform1f(glGetUniformLocation(lightingProgram, "light.quadratic"), 0.032);
         // Set material properties
         glUniform1f(glGetUniformLocation(lightingProgram, "material.shininess"), 32.0f);
