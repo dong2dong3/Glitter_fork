@@ -281,15 +281,16 @@ int main(int argc, char * argv[]) {
         lastFrame = currentFrame;
 
         glUseProgram(lightingProgram);
-        //GLint lightPosLoc = glGetUniformLocation(lightingShader.Program, "light.position");
         GLint lightPosLoc = glGetUniformLocation(lightingProgram, "light.position");
         GLint lightSpotdirLoc    = glGetUniformLocation(lightingProgram, "light.direction");
         GLint lightSpotCutOffLoc = glGetUniformLocation(lightingProgram, "light.cutOff");
+        GLint lightSpotOuterCutOffLoc = glGetUniformLocation(lightingProgram, "light.outerCutOff");
         GLint viewPosLoc  = glGetUniformLocation(lightingProgram, "viewPos");
+
         glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-//        glUniform3f(lightDirLoc, -0.2f, -1.0f, -0.3f);
         glUniform3f(lightSpotdirLoc,    camera.Front.x, camera.Front.y, camera.Front.z);
         glUniform1f(lightSpotCutOffLoc, glm::cos(glm::radians(12.5f)));
+        glUniform1f(lightSpotOuterCutOffLoc, glm::cos(glm::radians(17.5f)));
         glUniform3f(viewPosLoc,  camera.Position.x, camera.Position.y, camera.Position.z);
 
         // Set lights properties
@@ -330,11 +331,6 @@ int main(int argc, char * argv[]) {
         // Draw container
         glBindVertexArray(containerVAO);
         glm::mat4 model = glm::mat4(1.0f);
-//        model = glm::rotate(model, glm::radians(-45.0f), glm::vec3(1.0f, 0.3f, 0.5f));
-//
-//        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-//        glDrawArrays(GL_TRIANGLES, 0, 36);
-
 
         for(GLuint i = 0; i < 10; i++)
         {

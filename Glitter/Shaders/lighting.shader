@@ -34,6 +34,7 @@ struct Light
     vec3 position;
     vec3 direction;
     float cutOff;
+    float outerCutOff;
 
     vec3 ambient;
     vec3 diffuse;
@@ -57,11 +58,6 @@ uniform vec3 viewPos;
 
 void main()
 {
-    vec3 lightDir = normalize(light.position - FragPos);
-    // Check if lighting is inside the spotlight cone
-    float theta = dot(lightDir, normalize(-light.direction));
-    if(theta > light.cutOff) // Remember that we're working with angles as cosines instead of degrees so a '>' is used.
-    {
     // 环境光
 //     vec3 ambient = lightColor * material.ambient;
     vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
@@ -70,28 +66,27 @@ void main()
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(light.position - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-//     vec3 diffuse = lightColor * (diff * material.diffuse);
-//     vec3 diffuse = light.diffuse * (diff * material.diffuse);
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
 
     // 镜面高光
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-//     vec3 specular = light.specular * (spec * material.specular);
     vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+
+    // spotlight (soft edges)
+    float theta = dot(lightDir, normalize(-light.direction));
+    float epsilon = (light.cutOff - light.outerCutOff);
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    diffuse *= intensity;
+    specular *= intensity;
 
     // 衰减
     float distance = length(light.position - FragPos);
     float attenuation = 1.0f / (light.constant + light.linear*distance +light.quadratic*(distance*distance));
-// Also remove attenuation from ambient, because if we move too far,
-// the light in spotlight would then be darker than outside (since outside spotlight we have ambient lighting).
-//     ambient *= attenuation;
+    ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
 
     color = vec4(ambient + diffuse + specular, 1.0f);
-    } else { // else, use ambient light so scene isn't completely dark outside the spotlight.
-        color = vec4(light.ambient * vec3(texture(material.diffuse, TexCoords)), 1.0f);
-    }
 }
