@@ -242,8 +242,43 @@ int main(int argc, char * argv[]) {
 
         GLint objectColorLoc = glGetUniformLocation(lightingProgram, "objectColor");
         GLint lightColorLoc = glGetUniformLocation(lightingProgram, "lightColor");
-        glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
-        glUniform3f(lightColorLoc, 1.0f, 0.5f, 1.0f);
+
+        GLint matAmbientLoc = glGetUniformLocation(lightingProgram, "material.ambient");
+        GLint matDiffuseLoc = glGetUniformLocation(lightingProgram, "material.diffuse");
+        GLint matSpecularLoc = glGetUniformLocation(lightingProgram, "material.specular");
+        GLint matShineLoc = glGetUniformLocation(lightingProgram, "material.shininess");
+
+        glUniform3f(matAmbientLoc, 1.0f, 0.5f, 0.31f);
+        glUniform3f(matDiffuseLoc, 1.0f, 0.5f, 0.31f);
+        glUniform3f(matSpecularLoc, 0.5f, 0.5f, 0.5f);
+        glUniform1f(matShineLoc, 32.0f);
+
+//        glUniform3f(objectColorLoc, 1.0f, 0.5f, 0.31f);
+//        glUniform3f(lightColorLoc, 1.0f, 0.5f, 1.0f);
+
+        /**
+         * 一个光源的ambient、diffuse和specular光都有不同的亮度。
+         * 环境光通常设置为一个比较低的亮度，因为我们不希望环境色太过显眼。
+         * 光源的diffuse元素通常设置为我们希望光所具有的颜色；经常是一个明亮的白色。
+         * specular元素通常被设置为vec3(1.0f)类型的全强度发光。
+         * */
+        GLint lightAmbientLoc = glGetUniformLocation(lightingProgram, "light.ambient");
+        GLint lightDiffuseLoc = glGetUniformLocation(lightingProgram, "light.diffuse");
+        GLint lightSpecularLoc = glGetUniformLocation(lightingProgram, "light.specular");
+
+        glm::vec3 lightColor; lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+        glUniform3f(lightAmbientLoc, ambientColor.x, ambientColor.y, ambientColor.z);
+        glUniform3f(lightDiffuseLoc, diffuseColor.x, diffuseColor.y, diffuseColor.z);
+
+//        glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
+//        glUniform3f(lightDiffuseLoc, 0.5f, 0.5f, 0.5f);// 让我们把这个光调暗一点，这样会看起来更自然
+        glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
 
         // Camera/View transformations
         glm::mat4 view = glm::mat4(1.0f);
