@@ -12,7 +12,10 @@
 #include <vector>
 using namespace std;
 // GL Includes
-#include <GL/glew.h> // Contains all the necessery OpenGL includes
+#include "Mesh.h"
+#include "FileHandler.h"
+
+//#include <GL/glew.h> // Contains all the necessery OpenGL includes
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <stb_image.h>
@@ -20,8 +23,7 @@ using namespace std;
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "Mesh.h"
-#include "FileHandler.h"
+
 
 GLint TextureFromFile(const char* path, string directory);
 
@@ -30,7 +32,7 @@ class Model
 public:
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.
-    Model(GLchar* path)
+    Model(const char* path)
     {
         this->loadModel(path);
     }
@@ -64,6 +66,8 @@ private:
         // Retrieve the directory path of the filepath
         this->directory = path.substr(0, path.find_last_of('/'));
 
+        std::cout << "zjzjzj" << this->directory << std::endl;
+
         // Process ASSIMP's root node recursively
         this->processNode(scene->mRootNode, scene);
     }
@@ -71,6 +75,8 @@ private:
     // Processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
     void processNode(aiNode* node, const aiScene* scene)
     {
+        std::cout << "zjzjzj--node" << node->mNumMeshes << std::endl;
+
         // Process each mesh located at the current node
         for(GLuint i = 0; i < node->mNumMeshes; i++)
         {
@@ -199,7 +205,7 @@ GLint TextureFromFile(const char* path, string directory)
     GLuint textureID;
     glGenTextures(1, &textureID);
     int width,height;
-    unsigned char* image = stbi_load(FilePathFor("Resources/textures" + filename), &width, &height, 0, 0);
+    unsigned char* image = stbi_load(FilePathFor(filename), &width, &height, 0, 0);
     // Assign texture to ID
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);

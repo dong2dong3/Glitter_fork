@@ -1,6 +1,7 @@
 //
 // Created by Echo Zhangjie on 19/7/23.
 //
+#pragma once
 
 #include <filesystem>
 static void listFilesRecursively(const std::filesystem::path& path);
@@ -19,6 +20,6 @@ static const char* ConcatenatePath(const std::filesystem::path& directoryPath, c
 
 static const char* FilePathFor(const std::string& filename) {
     const char*  path = ConcatenatePath(ExecutableParentPath, filename);
-    std::cout << "zjzjzj--path" << path << std::endl;
+    std::cout  << path << std::endl;
     return path;
 }

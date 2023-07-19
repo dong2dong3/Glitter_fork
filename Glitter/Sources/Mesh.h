@@ -17,7 +17,8 @@
 #include <vector>
 using namespace std;
 // GL Includes
-#include <GL/glew.h> // Contains all the necessery OpenGL includes
+#include "glitter.hpp"
+//#include <GL/glew.h> // Contains all the necessery OpenGL includes
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -34,7 +35,7 @@ struct Vertex {
 struct Texture {
     GLuint id;
     string type;
-    string path;
+    aiString path;
 };
 
 class Mesh {

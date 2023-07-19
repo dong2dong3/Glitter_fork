@@ -110,28 +110,32 @@ endfunction()
 # 调用自定义函数进行递归复制文件夹
 copy_directory_with_relative_path(${SOURCE_DIR} ${DESTINATION_DIR})
 
+set(SRC_SHADERS_DIR ${CMAKE_SOURCE_DIR}/Glitter/Shaders)
+set(DES_SHADERS_DIR ${PROJECT_NAME}/Shaders)
+
+copy_directory_with_relative_path(${SRC_SHADERS_DIR} ${DES_SHADERS_DIR})
+
 
 #add_custom_command(
-#    TARGET ${PROJECT_NAME} ALL
+#    TARGET ${PROJECT_NAME} POST_BUILD
 #    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
-#    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources
 #    COMMENT "Copying resources to build directory"
 #    #DEPENDS ${PROJECT_SHADERS} ${PROJECT_RESOURCES}
 #)
 
-file(GLOB_RECURSE RESOURCES_FILES ${CMAKE_SOURCE_DIR}/Resources/*)
-foreach(file ${RESOURCES_FILES})
-    file(COPY ${file} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-endforeach()
-
-function(print_directory_structure TARGET_DIR)
-    message("Directory structure of ${TARGET_DIR}:")
-    file(GLOB_RECURSE files "${TARGET_DIR}/*")
-    foreach(file ${files})
-        file(RELATIVE_PATH relative_path "${TARGET_DIR}" "${file}")
-        message("  ${relative_path}")
-    endforeach()
-endfunction()
+#file(GLOB_RECURSE RESOURCES_FILES ${CMAKE_SOURCE_DIR}/Resources/*)
+#foreach(file ${RESOURCES_FILES})
+#    file(COPY ${file} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+#endforeach()
+#
+#function(print_directory_structure TARGET_DIR)
+#    message("Directory structure of ${TARGET_DIR}:")
+#    file(GLOB_RECURSE files "${TARGET_DIR}/*")
+#    foreach(file ${files})
+#        file(RELATIVE_PATH relative_path "${TARGET_DIR}" "${file}")
+#        message("  ${relative_path}")
+#    endforeach()
+#endfunction()
 
 # 调用函数打印目标文件目录结构
 # print_directory_structure(${CMAKE_BINARY_DIR})

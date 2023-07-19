@@ -87,4 +87,4 @@ static unsigned int CreateShaderProgram(const std::string& filePath) {
     return program;
 }
 
-#endif ChernoShader_hpp
+#endif
