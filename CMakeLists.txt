@@ -87,13 +87,42 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 #message("zjzjzj Glitter path is${CMAKE_BINARY_DIR}/${PROJECT_NAME}")
 message("zjzjzj GLFW_LIBRARIES ${GLFW_LIBRARIES}")
 
-add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources
-    COMMENT "Copying resources to build directory"
-    #DEPENDS ${PROJECT_SHADERS} ${PROJECT_RESOURCES}
-)
+
+# 定义源文件夹和目标文件夹的路径
+set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/Glitter/Resources)
+set(DESTINATION_DIR ${PROJECT_NAME}/Resources)
+
+# 自定义函数，用于递归地复制文件夹及其子文件夹，并保持相对路径结构
+function(copy_directory_with_relative_path SOURCE DESTINATION)
+    file(GLOB_RECURSE FILES RELATIVE "${SOURCE}" "${SOURCE}/*")
+    foreach(FILE ${FILES})
+        set(SRC "${SOURCE}/${FILE}")
+        set(DST "${DESTINATION}/${FILE}")
+        if(IS_DIRECTORY "${SRC}")
+            file(MAKE_DIRECTORY "${DST}")
+            copy_directory_with_relative_path("${SRC}" "${DST}")
+        else()
+            configure_file("${SRC}" "${DST}" COPYONLY)
+        endif()
+    endforeach()
+endfunction()
+
+# 调用自定义函数进行递归复制文件夹
+copy_directory_with_relative_path(${SOURCE_DIR} ${DESTINATION_DIR})
+
+
+#add_custom_command(
+#    TARGET ${PROJECT_NAME} ALL
+#    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
+#    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Resources $<TARGET_FILE_DIR:${PROJECT_NAME}>/Resources
+#    COMMENT "Copying resources to build directory"
+#    #DEPENDS ${PROJECT_SHADERS} ${PROJECT_RESOURCES}
+#)
+
+file(GLOB_RECURSE RESOURCES_FILES ${CMAKE_SOURCE_DIR}/Resources/*)
+foreach(file ${RESOURCES_FILES})
+    file(COPY ${file} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endforeach()
 
 function(print_directory_structure TARGET_DIR)
     message("Directory structure of ${TARGET_DIR}:")

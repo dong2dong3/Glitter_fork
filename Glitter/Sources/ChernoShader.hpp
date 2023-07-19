@@ -80,4 +80,11 @@ static unsigned int CreateShader(const std::string &vertexShader, const std::str
   return program;
 }
 
+static unsigned int CreateShaderProgram(const std::string& filePath) {
+    ShaderProgramSource source = ParseShader(filePath);
+    std::cout << "VERTEX" <<source.VertexSource<< "FRAGMENT" << source.FragmentSource << std::endl;
+    unsigned int program = CreateShader(source.VertexSource, source.FragmentSource);
+    return program;
+}
+
 #endif ChernoShader_hpp

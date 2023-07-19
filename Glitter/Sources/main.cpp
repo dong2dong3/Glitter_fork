@@ -14,6 +14,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "ChernoShader.hpp"
+#include "FileHandler.h"
 
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
@@ -28,18 +29,11 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void do_movement();
 void loadAndCreateTexture();
 void draft_dir();
-unsigned int createShaderProgram(const std::string& filePath);
-void listFilesRecursively(const std::filesystem::path& path);
-//const char* getResourcePathWith(const std::string filename);
-const char* getResourcePathWith(const std::string& filename);
-const char* concatenatePath(const std::filesystem::path& directoryPath, const std::string& filename);
-const char* getImageResourcePathWith(const std::string& filename);
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
 // Holds uniform value of texture mix
 GLfloat mixValue = 0.2f;
-
 
 // The MAIN function, from here we start the application and run the game loop
 std::ostream& operator<<(std::ostream& os, const glm::mat4& mat) {
@@ -50,18 +44,6 @@ std::ostream& operator<<(std::ostream& os, const glm::mat4& mat) {
         os << std::endl;
     }
     return os;
-}
-
-
-std::filesystem::path executableParentPath = std::filesystem::current_path();
-const char* concatenatePath(const std::filesystem::path& directoryPath, const std::string& filename)
-{
-    std::filesystem::path filePath = directoryPath;
-    filePath.append(filename);
-    std::string filePathString = filePath.string();
-    char* result = new char[filePathString.length() + 1];
-    std::strcpy(result, filePathString.c_str());
-    return result;
 }
 
 // Camera起始位置
@@ -112,7 +94,7 @@ int main(int argc, char * argv[]) {
     // Load OpenGL Functions
     gladLoadGL();
     std::cout << BLUE << "OpenGL " << glGetString(GL_VERSION) << RESET << std::endl;
-    std::cout << "Current working directory: " << executableParentPath << std::endl;
+    std::cout << "Current working directory: " << ExecutableParentPath << std::endl;
 
     // 查询GPU最大支持顶点个数 opengl version
     GLint nrAttributes;
@@ -288,7 +270,7 @@ int main(int argc, char * argv[]) {
     int iwidth, iheight;
     unsigned char* image;
     // Diffuse map
-    image = stbi_load(concatenatePath(executableParentPath, "Resources/container2.jpg"), &iwidth, &iheight, 0, 0);
+    image = stbi_load(FilePathFor("Resources/textures/container2.jpg"), &iwidth, &iheight, 0, 0);
     glBindTexture(GL_TEXTURE_2D, diffuseMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iwidth, iheight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -298,7 +280,7 @@ int main(int argc, char * argv[]) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
     // Specular map
-    image = stbi_load(concatenatePath(executableParentPath, "Resources/container2_specular.jpg"), &iwidth, &iheight, 0, 0);
+    image = stbi_load(FilePathFor("Resources/textures/container2_specular.jpg"), &iwidth, &iheight, 0, 0);
     glBindTexture(GL_TEXTURE_2D, specularMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, iwidth, iheight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -310,8 +292,8 @@ int main(int argc, char * argv[]) {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // Build and compile our shader program
-    unsigned int lightingProgram = createShaderProgram(concatenatePath(executableParentPath, "Shaders/lighting.shader"));
-    unsigned int lampProgram = createShaderProgram(concatenatePath(executableParentPath, "Shaders/lamp.shader"));
+    unsigned int lightingProgram = CreateShaderProgram(FilePathFor("Shaders/lighting.shader"));
+    unsigned int lampProgram = CreateShaderProgram(FilePathFor("Shaders/lamp.shader"));
     // Set texture units
     glUseProgram(lightingProgram);
     glUniform1i(glGetUniformLocation(lightingProgram, "material.diffuse"),  0);
@@ -764,11 +746,4 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
-}
-
-unsigned int createShaderProgram(const std::string& filePath) {
-    ShaderProgramSource source = ParseShader(filePath);
-    std::cout << "VERTEX" <<source.VertexSource<< "FRAGMENT" << source.FragmentSource << std::endl;
-    unsigned int program = CreateShader(source.VertexSource, source.FragmentSource);
-    return program;
 }
