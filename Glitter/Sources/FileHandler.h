@@ -20,6 +20,6 @@ static const char* ConcatenatePath(const std::filesystem::path& directoryPath, c
 
 static const char* FilePathFor(const std::string& filename) {
     const char*  path = ConcatenatePath(ExecutableParentPath, filename);
-    std::cout  << path << std::endl;
+    std::cout  << "zjzjzj---" << path << std::endl;
     return path;
 }

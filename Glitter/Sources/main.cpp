@@ -1,5 +1,8 @@
 // Local Headers
 #include "glitter.hpp"
+#include "Render.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 #include "Camera.h"
 
 // System Headers
@@ -30,6 +33,16 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void do_movement();
 void loadAndCreateTexture();
 void draft_dir();
+
+static void errorCallback(int error, const char* description) {
+    std::cerr << "GLFW Error " << error << ": " << description << std::endl;
+}
+
+static void GLCheckError() {
+    while (GLenum error = glGetError()) {
+        std::cout << "[OpenGL Error] (" << error << ")" << std::endl;
+    }
+}
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
@@ -113,56 +126,93 @@ int main(int argc, char * argv[]) {
     glEnable(GL_DEPTH_TEST);
 
     // Options
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    // Setup and compile our shaders
-    unsigned int shaderProgram = CreateShaderProgram(FilePathFor("Shaders/model_loading.shader"));
+    float positions[] = {
+            -0.5f, -0.5f,
+            0.5f, -0.5f,
+            0.5f,  0.5f,
+            -0.5f,  0.5f
+    };
 
-    // Load models
-    Model ourModel(FilePathFor("Resources/objects/nanosuit/nanosuit.obj"));
+    // ±ØÐëÓÃ unsigned
+    unsigned int indices[] = {
+            0, 1, 2,
+            2, 3, 0
+    };
 
-    // Draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    unsigned int vao; /* 保存顶点数组对象ID */
+    GLCall(glGenVertexArrays(1, &vao)); /* 生存顶点数组 */
+    GLCall(glBindVertexArray(vao)); /* 绑定顶点数组 */
+
+
+    unsigned int buffer;
+    GLCall(glGenBuffers(1, &buffer)); /* 生成缓冲区 */
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer)); /* 绑定缓冲区 */
+    GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW)); /* 设置缓冲区数据 */
+
+    GLCall(glEnableVertexAttribArray(0)); /* 激活顶点属性-索引0-位置 */
+    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0)); /* 设置顶点属性-索引0 */
+
+    unsigned int ibo;
+    GLCall(glGenBuffers(1, &ibo));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+
+
+    /* 从文件中解析着色器源码 */
+
+    unsigned int shader = CreateShaderProgram(FilePathFor("Shaders/Basic.shader"));
+    GLCall(glUseProgram(shader)); /* 使用着色器程序 */
+
+    int location;
+    GLCall(location = glGetUniformLocation(shader, "u_Color")); /* 获取指定名称统一变量的位置 */
+    ASSERT(location != -1);
+    GLCall(glUniform4f(location, 0.2f, 0.3f, 0.8f, 1.0f)); /* 设置对应的统一变量 */
+
+    /* 解绑 */
+    GLCall(glBindVertexArray(0));
+    GLCall(glUseProgram(0));
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+    float r = 0.0f;
+    float increment = 0.05f;
 
     // 渲染
-    while (!glfwWindowShouldClose(window))
-    {
-
-        // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
-        glfwPollEvents();
-        do_movement();
-
-        // Render
+    while (!glfwWindowShouldClose(window)) {
+        /* Render here */
+//        GLCall(glClear(GL_COLOR_BUFFER_BIT));
         glClearColor(0.75f, 0.52f, 0.3f, 1.0f);
 
-        // glClear(GL_COLOR_BUFFER_BIT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GLCall(glUseProgram(shader));
+        GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-        // Calculate deltatime of current frame
-        GLfloat currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        GLCall(glBindVertexArray(vao));
 
-        glUseProgram(shaderProgram);
+        GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
+        GLCall(glEnableVertexAttribArray(0));
+        GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
 
+        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
 
-        // Transformation matrices
-        glm::mat4 projection = glm::perspective(camera.Zoom, (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        /* 绘制 */
+        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
-        // Draw the loaded model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // Translate it down a bit so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// It's a bit too big for our scene, so scale it down
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        ourModel.Draw(shaderProgram);
+        if (r > 1.0f) {
+            increment = -0.05f;
+        } else if (r < 0.0f) {
+            increment = 0.05f;
+        }
+        r += increment;
 
-        // Swap the buffers
+        /* Swap front and back buffers */
         glfwSwapBuffers(window);
-    }
 
+        /* Poll for and process events */
+        glfwPollEvents();
+    }
+    GLCall(glDeleteProgram(shader)); /* 删除着色器程序 */
 
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
