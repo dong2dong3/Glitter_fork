@@ -127,93 +127,102 @@ int main(int argc, char * argv[]) {
 
     // Options
 
-    float positions[] = {
-            -0.5f, -0.5f,
-            0.5f, -0.5f,
-            0.5f,  0.5f,
-            -0.5f,  0.5f
-    };
+    {
+        float positions[] = {
+                -0.5f, -0.5f,
+                0.5f, -0.5f,
+                0.5f, 0.5f,
+                -0.5f, 0.5f
+        };
 
-    // ±ØÐëÓÃ unsigned
-    unsigned int indices[] = {
-            0, 1, 2,
-            2, 3, 0
-    };
+        // ±ØÐëÓÃ unsigned
+        unsigned int indices[] = {
+                0, 1, 2,
+                2, 3, 0
+        };
 
-    unsigned int vao; /* 保存顶点数组对象ID */
-    GLCall(glGenVertexArrays(1, &vao)); /* 生存顶点数组 */
-    GLCall(glBindVertexArray(vao)); /* 绑定顶点数组 */
+        unsigned int vao; /* 保存顶点数组对象ID */
+        GLCall(glGenVertexArrays(1, &vao)); /* 生存顶点数组 */
+        GLCall(glBindVertexArray(vao)); /* 绑定顶点数组 */
 
+        VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
-    unsigned int buffer;
-    GLCall(glGenBuffers(1, &buffer)); /* 生成缓冲区 */
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer)); /* 绑定缓冲区 */
-    GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW)); /* 设置缓冲区数据 */
+//    unsigned int buffer;
+//    GLCall(glGenBuffers(1, &buffer)); /* 生成缓冲区 */
+//    GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer)); /* 绑定缓冲区 */
+//    GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW)); /* 设置缓冲区数据 */
 
-    GLCall(glEnableVertexAttribArray(0)); /* 激活顶点属性-索引0-位置 */
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0)); /* 设置顶点属性-索引0 */
+        GLCall(glEnableVertexAttribArray(0)); /* 激活顶点属性-索引0-位置 */
+        GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0)); /* 设置顶点属性-索引0 */
 
-    unsigned int ibo;
-    GLCall(glGenBuffers(1, &ibo));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+        IndexBuffer ib(indices, 6);
 
-
-    /* 从文件中解析着色器源码 */
-
-    unsigned int shader = CreateShaderProgram(FilePathFor("Shaders/Basic.shader"));
-    GLCall(glUseProgram(shader)); /* 使用着色器程序 */
-
-    int location;
-    GLCall(location = glGetUniformLocation(shader, "u_Color")); /* 获取指定名称统一变量的位置 */
-    ASSERT(location != -1);
-    GLCall(glUniform4f(location, 0.2f, 0.3f, 0.8f, 1.0f)); /* 设置对应的统一变量 */
-
-    /* 解绑 */
-    GLCall(glBindVertexArray(0));
-    GLCall(glUseProgram(0));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+//    unsigned int ibo;
+//    GLCall(glGenBuffers(1, &ibo));
+//    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+//    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
 
 
-    float r = 0.0f;
-    float increment = 0.05f;
+        /* 从文件中解析着色器源码 */
 
-    // 渲染
-    while (!glfwWindowShouldClose(window)) {
-        /* Render here */
+        unsigned int shader = CreateShaderProgram(FilePathFor("Shaders/Basic.shader"));
+        GLCall(glUseProgram(shader)); /* 使用着色器程序 */
+
+        int location;
+        GLCall(location = glGetUniformLocation(shader, "u_Color")); /* 获取指定名称统一变量的位置 */
+        ASSERT(location != -1);
+        GLCall(glUniform4f(location, 0.2f, 0.3f, 0.8f, 1.0f)); /* 设置对应的统一变量 */
+
+        /* 解绑 */
+        GLCall(glBindVertexArray(0));
+        GLCall(glUseProgram(0));
+//    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+//    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+        vb.Unbind();
+        ib.Unbind();
+
+
+        float r = 0.0f;
+        float increment = 0.05f;
+
+        // 渲染
+        while (!glfwWindowShouldClose(window)) {
+            /* Render here */
 //        GLCall(glClear(GL_COLOR_BUFFER_BIT));
-        glClearColor(0.75f, 0.52f, 0.3f, 1.0f);
+            glClearColor(0.75f, 0.52f, 0.3f, 1.0f);
 
-        GLCall(glUseProgram(shader));
-        GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+            GLCall(glUseProgram(shader));
+            GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-        GLCall(glBindVertexArray(vao));
+            GLCall(glBindVertexArray(vao));
 
-        GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
-        GLCall(glEnableVertexAttribArray(0));
-        GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
+//        GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
+            vb.Bind();
 
-        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+            GLCall(glEnableVertexAttribArray(0));
+            GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
 
-        /* 绘制 */
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+//        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
+            ib.Bind();
 
-        if (r > 1.0f) {
-            increment = -0.05f;
-        } else if (r < 0.0f) {
-            increment = 0.05f;
+            /* 绘制 */
+            GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+            if (r > 1.0f) {
+                increment = -0.1f;
+            } else if (r < 0.0f) {
+                increment = 0.1f;
+            }
+            r += increment;
+
+            /* Swap front and back buffers */
+            glfwSwapBuffers(window);
+
+            /* Poll for and process events */
+            glfwPollEvents();
         }
-        r += increment;
-
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
+        GLCall(glDeleteProgram(shader)); /* 删除着色器程序 */
     }
-    GLCall(glDeleteProgram(shader)); /* 删除着色器程序 */
-
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
     return 0;
