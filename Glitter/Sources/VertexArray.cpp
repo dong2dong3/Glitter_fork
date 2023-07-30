@@ -4,6 +4,7 @@
 
 #include "VertexArray.h"
 #include "Renderer.h"
+#include "VertexBufferLayout.h"
 
 VertexArray::VertexArray() {
     GLCall(glGenVertexArrays(1, &m_RendererID)); /* 生存顶点数组 */

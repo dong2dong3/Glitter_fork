@@ -4,7 +4,6 @@
 
 #include "VertexBuffer.h"
 #include "Renderer.h"
-#include "glitter.hpp"
 
 VertexBuffer::VertexBuffer(const void* data, unsigned int size) {
     GLCall(glGenBuffers(1, &m_RendererID));
