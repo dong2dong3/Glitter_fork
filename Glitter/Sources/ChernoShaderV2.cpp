@@ -13,6 +13,7 @@
 ChernoShaderV2::ChernoShaderV2(const std::string& filepath): m_FilePath(filepath), m_RenderID(0) {
 
     ShaderProgramSource source = ParseShader(filepath);
+    std::cout << "\nzjzj--VERTEX" <<source.VertexSource<< "\nzjzj--FRAGMENT" << source.FragmentSource << std::endl;
     m_RenderID = CreateShader(source.VertexSource, source.FragmentSource);
 }
 ChernoShaderV2::~ChernoShaderV2() {
@@ -93,14 +94,22 @@ void ChernoShaderV2::SetUniform4f(const std::string& name, float v0, float v1, f
     GLCall(glUniform4f(GetUniformLocaiton(name), v0, 0.3f, 0.8f, 1.0f));
 }
 
-unsigned int ChernoShaderV2::GetUniformLocaiton(const std::string& name) {
+void ChernoShaderV2::SetUniform1i(const std::string& name, int value) {
+    GLCall(glUniform1i(GetUniformLocaiton(name), value));
+}
+void ChernoShaderV2::SetUniform1f(const std::string& name, float value) {
+    GLCall(glUniform1f(GetUniformLocaiton(name), value));
+}
+
+int ChernoShaderV2::GetUniformLocaiton(const std::string& name) {
     if(m_UniformLocationCache.find(name) != m_UniformLocationCache.end()) {
-        std::cout << "zjzjzj--use cache" << std::endl;
+//        std::cout << "zjzjzj--use cache" << std::endl;
         return m_UniformLocationCache[name];
     }
-    GLCall(unsigned int location = glGetUniformLocation(m_RenderID, name.c_str())); /* 获取指定名称统一变量的位置 */
+    int location;
+    GLCall(location = glGetUniformLocation(m_RenderID, name.c_str())); /* 获取指定名称统一变量的位置 */
     if (location == -1) {
-        std::cout << "Warning: uniform" << name << "doens't exist!" << std::endl;
+        std::cout << "Warning: uniform " << name << " doesn't exist!" << std::endl;
     }
     std::cout << "zjzjzj--find cache" << std::endl;
     m_UniformLocationCache[name] = location;
