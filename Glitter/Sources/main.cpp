@@ -4,6 +4,8 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
+#include "ChernoShaderV2.h"
+
 #include "Camera.h"
 
 // System Headers
@@ -126,7 +128,12 @@ int main(int argc, char * argv[]) {
     // Setup OpenGL options
     glEnable(GL_DEPTH_TEST);
 
-    // Options
+    /**
+     * 交换间隔，交换缓冲区之前等待的帧数，通常称为v-sync
+     * 默认情况下，交换间隔为0
+     * 这里设置为1，即每帧更新一次
+     **/
+    glfwSwapInterval(1);
 
     {
         float positions[] = {
@@ -151,36 +158,17 @@ int main(int argc, char * argv[]) {
         VertexBufferLayout layout;
         layout.Push<float>(2);
         va.AddBuffer(vb, layout);
-//    unsigned int buffer;
-//    GLCall(glGenBuffers(1, &buffer)); /* 生成缓冲区 */
-//    GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer)); /* 绑定缓冲区 */
-//    GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW)); /* 设置缓冲区数据 */
-
-//        GLCall(glEnableVertexAttribArray(0)); /* 激活顶点属性-索引0-位置 */
-//        GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0)); /* 设置顶点属性-索引0 */
 
         IndexBuffer ib(indices, 6);
-//    unsigned int ibo;
-//    GLCall(glGenBuffers(1, &ibo));
-//    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-//    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
+        ChernoShaderV2 shader(FilePathFor("Shaders/Basic.shader"));
+        shader.Bind();
 
-        /* 从文件中解析着色器源码 */
-        unsigned int shader = CreateShaderProgram(FilePathFor("Shaders/Basic.shader"));
-        GLCall(glUseProgram(shader)); /* 使用着色器程序 */
-
-        int location;
-        GLCall(location = glGetUniformLocation(shader, "u_Color")); /* 获取指定名称统一变量的位置 */
-        ASSERT(location != -1);
-        GLCall(glUniform4f(location, 0.2f, 0.3f, 0.8f, 1.0f)); /* 设置对应的统一变量 */
-
+        shader.SetUniform4f("u_Color",  0.8f, 0.3f, 0.8f, 1.0f);
         /* 解绑 */
-        GLCall(glBindVertexArray(0));
-        GLCall(glUseProgram(0));
-//    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-//    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+        va.Unbind();
         vb.Unbind();
         ib.Unbind();
+        shader.Unbind();
 
         float r = 0.0f;
         float increment = 0.05f;
@@ -191,15 +179,10 @@ int main(int argc, char * argv[]) {
 //        GLCall(glClear(GL_COLOR_BUFFER_BIT));
             glClearColor(0.75f, 0.52f, 0.3f, 1.0f);
 
-            GLCall(glUseProgram(shader));
-            GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
-
-//            GLCall(glBindVertexArray(vao));
-
+            shader.Bind();
+            shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
             va.Bind();
-//        GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer));
             vb.Bind();
-//        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
             ib.Bind();
 
             /* 绘制 */
@@ -218,7 +201,6 @@ int main(int argc, char * argv[]) {
             /* Poll for and process events */
             glfwPollEvents();
         }
-        GLCall(glDeleteProgram(shader)); /* 删除着色器程序 */
     }
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();

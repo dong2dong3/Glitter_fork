@@ -13,10 +13,7 @@
 #include <fstream>
 #include <sstream>
 
-struct ShaderProgramSource {
-  std::string VertexSource;
-  std::string FragmentSource;
-};
+
 static ShaderProgramSource ParseShader(const std::string& filePath)
 {
   std::ifstream stream(filePath); /* 这里没判断文件是否能正常打开 is_open */
