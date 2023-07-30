@@ -2,7 +2,7 @@
 // Created by Echo Zhangjie on 29/7/23.
 //
 
-#include "Render.h"
+#include "Renderer.h"
 #include <iostream>
 
 void GLClearError() {

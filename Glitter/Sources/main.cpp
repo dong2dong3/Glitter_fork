@@ -1,6 +1,6 @@
 // Local Headers
 #include "glitter.hpp"
-#include "Render.h"
+#include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"

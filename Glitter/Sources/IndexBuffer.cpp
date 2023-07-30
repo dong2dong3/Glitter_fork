@@ -3,7 +3,7 @@
 //
 
 #include "IndexBuffer.h"
-#include "Render.h"
+#include "Renderer.h"
 #include "glitter.hpp"
 
 IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count)

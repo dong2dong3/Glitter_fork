@@ -3,7 +3,7 @@
 //
 
 #include "VertexBuffer.h"
-#include "Render.h"
+#include "Renderer.h"
 #include "glitter.hpp"
 
 VertexBuffer::VertexBuffer(const void* data, unsigned int size) {
