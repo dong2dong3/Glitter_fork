@@ -91,17 +91,22 @@ unsigned int ChernoShaderV2::CompileShader(unsigned int type, const std::string&
     return id;
 }
 void ChernoShaderV2::SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3) {
-    GLCall(glUniform4f(GetUniformLocaiton(name), v0, 0.3f, 0.8f, 1.0f));
+    GLCall(glUniform4f(GetUniformLocation(name), v0, 0.3f, 0.8f, 1.0f));
 }
 
 void ChernoShaderV2::SetUniform1i(const std::string& name, int value) {
-    GLCall(glUniform1i(GetUniformLocaiton(name), value));
+    GLCall(glUniform1i(GetUniformLocation(name), value));
 }
 void ChernoShaderV2::SetUniform1f(const std::string& name, float value) {
-    GLCall(glUniform1f(GetUniformLocaiton(name), value));
+    GLCall(glUniform1f(GetUniformLocation(name), value));
 }
 
-int ChernoShaderV2::GetUniformLocaiton(const std::string& name) {
+void ChernoShaderV2::SetUniformMat4f(const std::string& name, const glm::mat4& matrix)
+{
+    GLCall(glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &matrix[0][0]));
+}
+
+int ChernoShaderV2::GetUniformLocation(const std::string& name) {
     if(m_UniformLocationCache.find(name) != m_UniformLocationCache.end()) {
 //        std::cout << "zjzjzj--use cache" << std::endl;
         return m_UniformLocationCache[name];

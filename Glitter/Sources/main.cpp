@@ -10,6 +10,8 @@
 
 #include "Camera.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
 // System Headers
 #include <GLFW/glfw3.h>
 #include "consoleColor.hpp"
@@ -139,10 +141,10 @@ int main(int argc, char * argv[]) {
 
     {
         float positions[] = {
-                -0.5f, -0.5f, 0.0f, 0.0f,
-                0.5f, -0.5f, 1.0f, 0.0f,
-                0.5f, 0.5f, 1.0f, 1.0f,
-                -0.5f, 0.5f, 0.0f, 1.0f
+                100.0f, 100.0f, 0.0f, 0.0f, // 0
+                200.0f, 100.0f, 1.0f, 0.0f,  // 1
+                200.0f, 200.0f, 1.0f, 1.0f,    // 2
+                100.0f, 200.0f, 0.0f, 1.0f   // 3
         };
 
         // ±ØÐëÓÃ unsigned
@@ -167,6 +169,16 @@ int main(int argc, char * argv[]) {
 
         IndexBuffer ib(indices, 6);
 
+        /* glm::ortho 正交矩阵 */
+        /* 这里应该是 960x720 而不是 960x540 的分辨率 */
+        glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 720.0f, -1.0f, 1.0f);
+        /* 相机位置 视图矩阵 x&y&z */
+        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-100, 0, 0));
+//        /* 模型矩阵 对象位置 */
+//        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(200, 200, 0));
+//
+//        glm::mat4 mvp = proj * view * model; /* 模型视图投影矩阵 */
+
         ChernoShaderV2 shader(FilePathFor("Shaders/Basic.shader"));
         shader.Bind();
         shader.SetUniform4f("u_Color",  0.8f, 0.3f, 0.8f, 1.0f);
@@ -185,15 +197,30 @@ int main(int argc, char * argv[]) {
 
         float r = 0.0f;
         float increment = 0.05f;
+        bool show_demo_window = true;
+        bool show_another_window = false;
+        ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+        glm::vec3 translation(200, 200, 0);
+        ImGui::CreateContext(NULL);
+        ImGui_ImplGlfwGL3_Init(window, true);
+        ImGui::StyleColorsDark();
+
 
         // 渲染
         while (!glfwWindowShouldClose(window)) {
             /* Render here */
 //        GLCall(glClear(GL_COLOR_BUFFER_BIT));
             renderer.Clear();
+            ImGui_ImplGlfwGL3_NewFrame();
+
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
+            glm::mat4 mvp = proj * view * model; /* 模型视图投影矩阵 */
 
             shader.Bind();
             shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
+            shader.SetUniformMat4f("u_MVP", mvp);
+
             va.Bind();
             ib.Bind();
 
@@ -206,6 +233,12 @@ int main(int argc, char * argv[]) {
                 increment = 0.1f;
             }
             r += increment;
+            {
+                ImGui::SliderFloat3("Translation", &translation.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            }
+            ImGui::Render();
+            ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
@@ -214,6 +247,9 @@ int main(int argc, char * argv[]) {
             glfwPollEvents();
         }
     }
+
+    ImGui_ImplGlfwGL3_Shutdown();
+    ImGui::DestroyContext();
     // Terminate GLFW, clearing any resources allocated by GLFW.
     glfwTerminate();
     return 0;
