@@ -52,7 +52,7 @@ static void GLCheckError() {
 }
 
 // Window dimensions
-const GLuint WIDTH = 800, HEIGHT = 600;
+const GLuint WIDTH = 640, HEIGHT = 480;
 // Holds uniform value of texture mix
 GLfloat mixValue = 0.2f;
 
@@ -96,7 +96,7 @@ int main(int argc, char * argv[]) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // 创建窗口,获取窗口上上下文
-    GLFWwindow* window = glfwCreateWindow(mWidth, mHeight, "LearnOpenGL", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1280, 960, "LearnOpenGL", nullptr, nullptr);
     if (window == nullptr)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -141,10 +141,10 @@ int main(int argc, char * argv[]) {
 
     {
         float positions[] = {
-                100.0f, 100.0f, 0.0f, 0.0f, // 0
-                200.0f, 100.0f, 1.0f, 0.0f,  // 1
-                200.0f, 200.0f, 1.0f, 1.0f,    // 2
-                100.0f, 200.0f, 0.0f, 1.0f   // 3
+                -50.0f, -50.0f, 0.0f, 0.0f,  // 0
+                50.0f, -50.0f, 1.0f, 0.0f,  // 1
+                50.0f, 50.0f, 1.0f, 1.0f,  // 2
+                -50.0f, 50.0f, 0.0f, 1.0f   // 3
         };
 
         // ±ØÐëÓÃ unsigned
@@ -173,7 +173,7 @@ int main(int argc, char * argv[]) {
         /* 这里应该是 960x720 而不是 960x540 的分辨率 */
         glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 720.0f, -1.0f, 1.0f);
         /* 相机位置 视图矩阵 x&y&z */
-        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-100, 0, 0));
+        glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
 //        /* 模型矩阵 对象位置 */
 //        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(200, 200, 0));
 //
@@ -185,6 +185,7 @@ int main(int argc, char * argv[]) {
 
         Cherno_Texture texture(FilePathFor("Resources/textures/ChernoLogo.png"));
         texture.Bind();
+        // bind texture to slot 0
         shader.SetUniform1i("u_Texture", 0);
 
         /* 解绑 */
@@ -201,7 +202,9 @@ int main(int argc, char * argv[]) {
         bool show_another_window = false;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-        glm::vec3 translation(200, 200, 0);
+        glm::vec3 translationA(200, 200, 0);
+        glm::vec3 translationB(400, 200, 0);
+
         ImGui::CreateContext(NULL);
         ImGui_ImplGlfwGL3_Init(window, true);
         ImGui::StyleColorsDark();
@@ -214,18 +217,25 @@ int main(int argc, char * argv[]) {
             renderer.Clear();
             ImGui_ImplGlfwGL3_NewFrame();
 
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
-            glm::mat4 mvp = proj * view * model; /* 模型视图投影矩阵 */
+            {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA);
+                glm::mat4 mvp = proj * view * model; /* 模型视图投影矩阵 */
+                shader.Bind();
+                shader.SetUniformMat4f("u_MVP", mvp);
+                /* 绘制 */
+                renderer.Draw(va, ib, shader);
+            }
 
-            shader.Bind();
-            shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
-            shader.SetUniformMat4f("u_MVP", mvp);
-
+            {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);
+                glm::mat4 mvp = proj * view * model; /* 模型视图投影矩阵 */
+                shader.Bind();
+                shader.SetUniformMat4f("u_MVP", mvp);
+                /* 绘制 */
+                renderer.Draw(va, ib, shader);
+            }
             va.Bind();
             ib.Bind();
-
-            /* 绘制 */
-            renderer.Draw(va, ib, shader);
 
             if (r > 1.0f) {
                 increment = -0.1f;
@@ -234,7 +244,9 @@ int main(int argc, char * argv[]) {
             }
             r += increment;
             {
-                ImGui::SliderFloat3("Translation", &translation.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+                ImGui::SliderFloat3("Translation A", &translationA.x, 0.0f, 960.0f);
+                ImGui::SliderFloat3("Translation B", &translationB.x, 0.0f, 960.0f);
+                // Edit 1 float using a slider from 0.0f to 1.0f
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             }
             ImGui::Render();
