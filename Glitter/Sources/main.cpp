@@ -206,11 +206,11 @@ int main(int argc, char * argv[]) {
         ImGui_ImplGlfwGL3_Init(window, true);
         ImGui::StyleColorsDark();
 
-
         // 渲染
         while (!glfwWindowShouldClose(window)) {
             /* Render here */
 //        GLCall(glClear(GL_COLOR_BUFFER_BIT));
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             renderer.Clear();
             ImGui_ImplGlfwGL3_NewFrame();
 
